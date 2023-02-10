@@ -1,0 +1,31 @@
+[
+{
+    "bookSourceComment": "第一次做post类型.第一次制作失败,搜索成功！\n手机上在阅读里点登陆，然后再点我是真人，等成功后点右上角对钩，即可搜索",
+    "bookSourceGroup": "自己做的",
+    "bookSourceName": "147小说(post类型，需要验证，不过比较简单。电脑版网站较难)",
+    "bookSourceType": 0,
+    "bookSourceUrl": "https://m.147xs.org/",
+    "customOrder": 0,
+    "enabled": false,
+    "enabledCookieJar": true,
+    "enabledExplore": false,
+    "enabledReview": true,
+    "header": "{\n \"User-Agent\": \"Mozilla/5.0 (Linux) AppleWebKit Chrome UCBrowser Mobile Safari\"\n}",
+    "lastUpdateTime": 1675993077083,
+    "loginUrl": "https://m.147xs.org/search.php",
+    "respondTime": 181539,
+    "ruleBookInfo": {},
+    "ruleContent": {},
+    "ruleExplore": {},
+    "ruleReview": {},
+    "ruleSearch": {
+        "author": "class.user-bookcase@dd@p.0@text",
+        "bookList": ".user-bookcase@dl",
+        "bookUrl": ".user-bookcase@dl@dt@a@href",
+        "name": "dt@text"
+    },
+    "ruleToc": {},
+    "searchUrl": "https://m.147xs.org/search.php,{\n  \"method\": \"POST\",\n  \"body\": \"keyword={{key}}\"\n}",
+    "weight": 0
+}
+]
