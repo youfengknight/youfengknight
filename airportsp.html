@@ -558,8 +558,13 @@ function updateUrlStatus(li, isAccessible, duration) {
         statusClass = 'status-normal';
     } else {
        // li.classList.add('disabled');省的点不开链接
-        statusBadge.textContent = '无法访问';
-        statusClass = 'status-error';
+         if (duration < 5000) {//直接在这里添加判断延迟即可
+                    statusBadge.textContent = '正常';
+                    statusClass = 'status-normal';
+                } else {
+                    statusBadge.textContent = '无法访问';
+                    statusClass = 'status-error';
+                }
     }
 
     statusBadge.className = `status-badge ${statusClass}`;
