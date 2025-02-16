@@ -576,6 +576,17 @@ body {
     color: var(--item_left_title_color);
 }
 
+
+.projectItemLeft h2 {
+    font-weight: normal;
+    font-size: 14px;
+    margin: 0px;
+
+    transition: font-size 0.4s ease;
+    color: var(--item_left_title_color);
+}
+
+
 .projectItemLeft {
     transition: width 0.4s ease;
     height: 100%;
