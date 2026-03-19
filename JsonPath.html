@@ -99,10 +99,23 @@
             transition: background-color 0.2s ease, border-color 0.2s ease;
         }
 
+        /* 页面头部 */
         .header {
             padding: 28px 32px 20px;
             border-bottom: 1px solid var(--border-color);
             transition: border-color 0.2s ease;
+        }
+
+        /* 头部内容布局 - 标题和主题切换按钮 */
+        .header-content {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .header-text {
+            flex: 1;
         }
 
         .header h1 {
@@ -123,14 +136,6 @@
 
         .main-content {
             padding: 24px 32px 32px;
-        }
-
-        .theme-bar {
-            display: flex;
-            justify-content: flex-end;
-            gap: 16px;
-            align-items: center;
-            margin-bottom: 16px;
         }
 
         .json-view-toggle {
@@ -179,6 +184,7 @@
             gap: 8px;
             flex-wrap: wrap;
             align-items: center;
+            width: 100%;
         }
 
         .json-search-box {
@@ -242,6 +248,7 @@
             border: 1px solid var(--border-light);
             border-radius: 10px;
             background: var(--bg-tertiary);
+            width: 100%;
         }
 
         /* JSON 树形样式 */
@@ -342,38 +349,43 @@
             visibility: hidden;
         }
 
+        /* JSON键名样式 */
         .json-key {
-            color: #881391;
+            color: #000000;
         }
 
         [data-theme="dark"] .json-key {
             color: #9cdcfe;
         }
 
+        /* JSON字符串 - 绿色 */
         .json-string {
-            color: #1a1aa6;
+            color: rgb(5, 150, 105);
         }
 
         [data-theme="dark"] .json-string {
-            color: #ce9178;
+            color: rgb(5, 180, 125);
         }
 
+        /* JSON数字 - 蓝色 */
         .json-number {
-            color: #1c00cf;
+            color: rgb(37, 99, 235);
         }
 
         [data-theme="dark"] .json-number {
-            color: #b5cea8;
+            color: rgb(96, 165, 250);
         }
 
+        /* JSON布尔值 - 橙色 */
         .json-boolean {
-            color: #0d22aa;
+            color: rgb(234, 88, 12);
         }
 
         [data-theme="dark"] .json-boolean {
-            color: #569cd6;
+            color: rgb(251, 146, 60);
         }
 
+        /* JSON null值 */
         .json-null {
             color: #808080;
             font-style: italic;
@@ -389,6 +401,7 @@
 
         .json-node-line {
             padding: 2px 0;
+            position: relative;
         }
 
         .json-node-line:hover {
@@ -396,13 +409,52 @@
             border-radius: 3px;
         }
 
+        /* 节点操作按钮 - 悬停时显示 */
+        .json-node-actions {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: none;
+            gap: 4px;
+        }
+
+        .json-node-line:hover .json-node-actions {
+            display: flex;
+        }
+
+        .json-action-btn {
+            padding: 2px 8px;
+            font-size: 0.75rem;
+            border: 1px solid var(--border-light);
+            border-radius: 4px;
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s ease;
+        }
+
+        .json-action-btn:hover {
+            background: var(--accent);
+            color: var(--bg-primary);
+            border-color: var(--accent);
+        }
+
+        .json-action-btn.copied {
+            background: #10b981;
+            border-color: #10b981;
+            color: white;
+        }
+
         .json-match {
             background: var(--highlight);
             border-radius: 2px;
         }
 
+        /* 搜索关键词高亮 */
         .json-search-highlight {
-            background: #ffeb3b;
+            background: #fff494;
             color: #000;
             border-radius: 2px;
         }
@@ -410,6 +462,15 @@
         [data-theme="dark"] .json-search-highlight {
             background: #b58b1a;
             color: #fff;
+        }
+
+        /* 搜索匹配行高亮 - 50%透明度 */
+        .json-line-highlight {
+            background: rgba(255, 244, 146, 0.391);
+        }
+
+        [data-theme="dark"] .json-line-highlight {
+            background: rgba(164, 146, 97, 0.5);
         }
 
         .theme-toggle {
@@ -835,31 +896,34 @@
             border-bottom: none;
         }
 
+        /* 控制栏 - 显示模式、风格、开关等 */
         .controls-bar {
             display: flex;
-            gap: 32px;
+            gap: 16px;
             align-items: center;
             flex-wrap: wrap;
             background: var(--bg-primary);
-            padding: 16px 0;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 20px;
-            min-height: 60px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px var(--shadow);
             transition: background-color 0.2s ease, border-color 0.2s ease;
         }
 
+        /* 控制组 - 显示/风格单选 */
         .control-group {
             display: flex;
             align-items: center;
-            gap: 12px;
-            height: 38px;
+            gap: 8px;
+            height: 32px;
+            flex: 0 0 auto;
         }
 
         .control-group label {
             font-weight: 450;
             color: var(--text-secondary);
-            font-size: 0.9rem;
-            min-width: 44px;
+            font-size: 0.85rem;
+            min-width: 40px;
             transition: color 0.2s ease;
         }
 
@@ -867,24 +931,24 @@
             display: flex;
             gap: 2px;
             background: var(--bg-tertiary);
-            padding: 3px;
-            border-radius: 10px;
-            height: 34px;
+            padding: 2px;
+            border-radius: 8px;
+            height: 28px;
             align-items: center;
             transition: background-color 0.2s ease;
         }
 
         .radio-option {
-            padding: 5px 16px;
-            border-radius: 8px;
+            padding: 4px 12px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: var(--text-secondary);
             transition: all 0.1s;
             user-select: none;
             display: flex;
             align-items: center;
-            height: 28px;
+            height: 24px;
             line-height: 1;
         }
 
@@ -898,26 +962,37 @@
             display: none;
         }
 
-        .wildcard-switch {
+        /* 开关组容器 - 所有开关放在一行 */
+        .switch-group {
             display: flex;
             align-items: center;
-            gap: 8px;
-            height: 38px;
+            gap: 12px;
+            height: 32px;
+            background: var(--bg-tertiary);
+            padding: 4px 12px;
+            border-radius: 8px;
         }
 
-        .wildcard-switch label {
+        /* 单个开关项 */
+        .switch-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .switch-item label:first-child {
             font-weight: 450;
             color: var(--text-secondary);
-            font-size: 0.9rem;
-            transition: color 0.2s ease;
+            font-size: 0.8rem;
+            white-space: nowrap;
         }
 
+        /* 开关按钮样式 */
         .switch {
             position: relative;
             display: inline-block;
-            width: 48px;
-            height: 24px;
-            margin-left: 4px;
+            width: 32px;
+            height: 18px;
         }
 
         .switch input {
@@ -935,14 +1010,14 @@
             bottom: 0;
             background-color: #ccc;
             transition: .2s;
-            border-radius: 24px;
+            border-radius: 18px;
         }
 
         .slider:before {
             position: absolute;
             content: "";
-            height: 20px;
-            width: 20px;
+            height: 14px;
+            width: 14px;
             left: 2px;
             bottom: 2px;
             background-color: white;
@@ -955,23 +1030,23 @@
         }
 
         .switch input:checked + .slider:before {
-            transform: translateX(24px);
+            transform: translateX(14px);
         }
 
         .search-box {
-            flex: 1;
-            min-width: 260px;
+            flex: 1 1 200px;
+            min-width: 180px;
             position: relative;
-            height: 38px;
+            height: 32px;
         }
 
         .search-box input {
             width: 100%;
-            height: 38px;
-            padding: 0 14px 0 38px;
+            height: 32px;
+            padding: 0 12px 0 32px;
             border: 1px solid var(--border-light);
-            border-radius: 10px;
-            font-size: 0.9rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
             background: var(--bg-primary);
             transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
             color: var(--text-primary);
@@ -984,12 +1059,12 @@
 
         .search-box i {
             position: absolute;
-            left: 14px;
+            left: 12px;
             top: 50%;
             transform: translateY(-50%);
             color: var(--text-muted);
             font-style: normal;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             line-height: 1;
             display: flex;
             align-items: center;
@@ -998,12 +1073,12 @@
 
         .stats {
             color: var(--text-secondary);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             background: var(--bg-tertiary);
-            padding: 8px 16px;
-            border-radius: 40px;
+            padding: 6px 12px;
+            border-radius: 20px;
             white-space: nowrap;
-            height: 38px;
+            height: 32px;
             display: flex;
             align-items: center;
             transition: background-color 0.2s ease, color 0.2s ease;
@@ -1758,7 +1833,9 @@
             body { padding: 12px; }
             .main-content { padding: 16px; }
             .header { padding: 20px 16px 16px; }
+            .header-content { flex-direction: column; align-items: flex-start; gap: 12px; }
             .header h1 { font-size: 1.4rem; }
+            .theme-toggle { align-self: flex-end; }
 
             .input-tabs { width: 100%; }
             .tab-btn { flex: 1; text-align: center; padding: 7px 8px; font-size: 0.85rem; }
@@ -1767,7 +1844,7 @@
             .control-group { width: 100%; justify-content: space-between; }
             .radio-group { width: 100%; }
             .radio-option { flex: 1; text-align: center; justify-content: center; }
-            .wildcard-switch, .copy-switch { width: 100%; justify-content: space-between; }
+            .switch-group { width: 100%; justify-content: space-between; flex-wrap: wrap; }
             .search-box { min-width: unset; width: 100%; }
             .stats { width: 100%; text-align: center; justify-content: center; }
 
@@ -1776,6 +1853,39 @@
             .url-input input, .url-input button { width: 100%; }
             .jsonpath-test-input { flex-direction: column; }
             .jsonpath-test-input input, .jsonpath-test-input button { width: 100%; }
+
+            /* JSON格式栏和开关优化 - 手机端垂直布局 */
+            .json-format-bar {
+                flex-direction: column;
+                gap: 12px;
+                align-items: stretch;
+            }
+
+            .json-format-options {
+                width: 100%;
+                justify-content: space-between;
+                gap: 8px;
+            }
+
+            .json-format-option {
+                flex: 1;
+                padding: 6px 8px;
+                font-size: 0.8rem;
+            }
+
+            .json-view-toggle {
+                width: 100%;
+                justify-content: space-between;
+                padding: 6px 12px;
+                font-size: 0.85rem;
+            }
+
+            .json-escape-option {
+                width: 100%;
+                justify-content: space-between;
+                padding: 6px 12px;
+                font-size: 0.8rem;
+            }
 
             .stats-panel { flex-direction: column; gap: 12px; }
             .type-dist { margin-left: 0; width: 100%; }
@@ -1792,6 +1902,63 @@
             .jsonpath-item .value-preview { max-width: 100%; width: 100%; }
             .jsonpath-test-item { flex-direction: column; align-items: flex-start; }
             .jsonpath-test-item .value { max-width: 100%; width: 100%; }
+
+            /* JSON视图工具栏优化 - 手机端按钮换行显示 */
+            .json-viewer-section {
+                overflow-x: auto;
+            }
+
+            .json-viewer-header {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .json-viewer-toolbar {
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+
+            .json-search-box {
+                flex-wrap: wrap;
+                width: 100%;
+            }
+
+            .json-search-box input {
+                flex: 1 1 120px;
+                min-width: 100px;
+                width: auto;
+            }
+
+            .json-search-box button {
+                padding: 4px 8px;
+                font-size: 0.75rem;
+                flex: 0 0 auto;
+            }
+
+            .json-viewer-btn {
+                padding: 4px 10px;
+                font-size: 0.75rem;
+                flex: 0 0 auto;
+                min-width: auto;
+            }
+
+            /* JSON数据视图支持水平滚动 */
+            .json-viewer-content {
+                overflow-x: auto;
+                max-width: 100%;
+            }
+
+            .json-tree {
+                min-width: max-content;
+            }
+
+            .json-node {
+                white-space: nowrap;
+            }
+
+            .json-children {
+                min-width: max-content;
+            }
         }
     </style>
 </head>
@@ -1814,24 +1981,19 @@
 
     <div class="container">
         <div class="header">
-            <h1>JSONPath 字段提取器 · 完整层级通配符</h1>
-            <p>输入 JSON，自动生成所有字段的路径表达式（支持路径复杂度分析），同时增加Json视图，可以展开和收缩🚀</p>
-        </div>
-
-        <div class="main-content">
-            <div class="theme-bar">
-                <!-- <div class="json-view-toggle">
-                    <label>JSON视图</label>
-                    <label class="switch">
-                        <input type="checkbox" id="json-view-toggle">
-                        <span class="slider"></span>
-                    </label>
-                </div> -->
+            <div class="header-content">
+                <div class="header-text">
+                    <h1>JSONPath 字段提取器 · 完整层级通配符</h1>
+                    <p>输入 JSON，自动生成所有字段的路径表达式（支持路径复杂度分析），同时增加Json视图，可以展开和收缩🚀</p>
+                </div>
                 <div class="theme-toggle">
                     <button class="theme-btn active" data-theme-btn="light">☀️ 白天</button>
                     <button class="theme-btn" data-theme-btn="dark">🌙 夜间</button>
                 </div>
             </div>
+        </div>
+
+        <div class="main-content">
 
             <div class="input-section">
                 <div class="input-tabs">
@@ -1843,7 +2005,6 @@
                 <div id="json-tab" class="tab-content active">
                     <div class="json-format-bar">
                         <div class="json-format-options">
-                            <label class="json-format-label">JSON:</label>
                             <label class="json-format-option">
                                 <input type="radio" name="json-format" value="preserve" checked>
                                 <span>保持</span>
@@ -1865,11 +2026,12 @@
                             </label>
                         </div>
                         <div class="json-escape-option">
+                            <span>JSON转义</span>
                             <label class="switch">
                                 <input type="checkbox" id="json-escape-toggle">
                                 <span class="slider"></span>
                             </label>
-                            <span>JSON转义</span>
+                           
                         </div>
                     </div>
                     <div class="json-input-wrapper">
@@ -1943,7 +2105,7 @@
             <!-- JSON树形视图查看器 -->
             <div class="json-viewer-section" id="json-viewer-section" style="display: none;">
                 <div class="json-viewer-header">
-                    <h3>📄 JSON 数据视图</h3>
+                    <h3>🖇️ JSON 数据视图</h3>
                     <div class="json-viewer-toolbar">
                         <div class="json-search-box">
                             <input type="text" id="json-search-input" placeholder="查找...">
@@ -1989,36 +2151,38 @@
                     </div>
                 </div>
 
-                <div class="wildcard-switch">
-                    <label>通配符模式</label>
-                    <label class="switch">
-                        <input type="checkbox" id="wildcard-toggle" checked>
-                        <span class="slider"></span>
-                    </label>
-                </div>
+                <div class="switch-group">
+                    <div class="switch-item">
+                        <label>通配符</label>
+                        <label class="switch">
+                            <input type="checkbox" id="wildcard-toggle" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
 
-                <div class="first-item-switch">
-                    <label>仅显示首项</label>
-                    <label class="switch">
-                        <input type="checkbox" id="first-item-toggle">
-                        <span class="slider"></span>
-                    </label>
-                </div>
+                    <div class="switch-item">
+                        <label>首项</label>
+                        <label class="switch">
+                            <input type="checkbox" id="first-item-toggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
 
-                <div class="depth-color-switch">
-                    <label>深度颜色</label>
-                    <label class="switch">
-                        <input type="checkbox" id="depth-color-toggle" checked>
-                        <span class="slider"></span>
-                    </label>
-                </div>
+                    <div class="switch-item">
+                        <label>颜色</label>
+                        <label class="switch">
+                            <input type="checkbox" id="depth-color-toggle" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
 
-                <div class="copy-switch">
-                    <label>复制开关</label>
-                    <label class="switch">
-                        <input type="checkbox" id="copy-toggle">
-                        <span class="slider"></span>
-                    </label>
+                    <div class="switch-item">
+                        <label>复制</label>
+                        <label class="switch">
+                            <input type="checkbox" id="copy-toggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
                 </div>
 
                 <div class="search-box">
@@ -4007,6 +4171,50 @@
 
                 const type = getType(data);
 
+                // 创建操作按钮容器
+                const actionsContainer = document.createElement('div');
+                actionsContainer.className = 'json-node-actions';
+
+                // 复制值按钮
+                const copyValueBtn = document.createElement('button');
+                copyValueBtn.className = 'json-action-btn';
+                copyValueBtn.textContent = '复制值';
+                copyValueBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    const valueStr = type === 'object' || type === 'array' 
+                        ? JSON.stringify(data, null, 2) 
+                        : String(data);
+                    navigator.clipboard.writeText(valueStr).then(() => {
+                        copyValueBtn.textContent = '已复制';
+                        copyValueBtn.classList.add('copied');
+                        setTimeout(() => {
+                            copyValueBtn.textContent = '复制值';
+                            copyValueBtn.classList.remove('copied');
+                        }, 1500);
+                    });
+                };
+
+                // 复制JSONPath按钮
+                const copyPathBtn = document.createElement('button');
+                copyPathBtn.className = 'json-action-btn';
+                copyPathBtn.textContent = '复制路径';
+                copyPathBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    const jsonPath = path ? '$' + path : '$';
+
+                    navigator.clipboard.writeText(jsonPath).then(() => {
+                        copyPathBtn.textContent = '已复制';
+                        copyPathBtn.classList.add('copied');
+                        setTimeout(() => {
+                            copyPathBtn.textContent = '复制路径';
+                            copyPathBtn.classList.remove('copied');
+                        }, 1500);
+                    });
+                };
+
+                actionsContainer.appendChild(copyValueBtn);
+                actionsContainer.appendChild(copyPathBtn);
+
                 if (type === 'object' || type === 'array') {
                     const isArray = type === 'array';
                     const entries = isArray ? data : Object.entries(data);
@@ -4025,10 +4233,11 @@
                         toggle.textContent = nodeWrapper.classList.contains('collapsed') ? '+' : '−';
                     };
 
-                    // 子数量标记 {数字} 或 [数字]
+                    // 子数量标记 Object{数字} 或 Array[数字]
                     const countBadge = document.createElement('span');
                     countBadge.className = 'json-count-badge';
-                    countBadge.textContent = isArray ? `[${len}]` : `{${len}}`;
+                    countBadge.style.color = 'rgb(59, 130, 246)';
+                    countBadge.textContent = isArray ? `Array[${len}]` : `Object{${len}}`;
 
                     // 键名（如果有）
                     if (key !== '') {
@@ -4037,15 +4246,42 @@
                         keySpan.textContent = `"${key}"`;
                         nodeLine.appendChild(toggle);
                         nodeLine.appendChild(keySpan);
-                        nodeLine.appendChild(countBadge);
                         // 冒号
                         const colonSpan = document.createElement('span');
                         colonSpan.className = 'json-colon';
                         colonSpan.textContent = ': ';
                         nodeLine.appendChild(colonSpan);
-                    } else {
-                        nodeLine.appendChild(toggle);
                         nodeLine.appendChild(countBadge);
+                    } else if (path === '') {
+                        // 根节点
+                        const rootLabel = document.createElement('span');
+                        rootLabel.className = 'json-key';
+                        rootLabel.textContent = '根节点';
+                        nodeLine.appendChild(toggle);
+                        nodeLine.appendChild(rootLabel);
+                        const colonSpan = document.createElement('span');
+                        colonSpan.className = 'json-colon';
+                        colonSpan.textContent = ': ';
+                        nodeLine.appendChild(colonSpan);
+                        nodeLine.appendChild(countBadge);
+                    } else {
+                        // 数组元素，显示索引
+                        const indexMatch = path.match(/\[(\d+)\]$/);
+                        if (indexMatch) {
+                            const indexSpan = document.createElement('span');
+                            indexSpan.className = 'json-key';
+                            indexSpan.textContent = `[${indexMatch[1]}]`;
+                            nodeLine.appendChild(toggle);
+                            nodeLine.appendChild(indexSpan);
+                            const colonSpan = document.createElement('span');
+                            colonSpan.className = 'json-colon';
+                            colonSpan.textContent = ': ';
+                            nodeLine.appendChild(colonSpan);
+                            nodeLine.appendChild(countBadge);
+                        } else {
+                            nodeLine.appendChild(toggle);
+                            nodeLine.appendChild(countBadge);
+                        }
                     }
 
                     // 开括号（折叠时隐藏）
@@ -4059,6 +4295,9 @@
                     preview.className = 'json-preview';
                     preview.textContent = isArray ? '[]' : '{}';
                     nodeLine.appendChild(preview);
+
+                    // 添加操作按钮
+                    nodeLine.appendChild(actionsContainer);
 
                     node.appendChild(nodeLine);
 
@@ -4118,6 +4357,8 @@
                     valueSpan.textContent += isLast ? '' : ',';
 
                     nodeLine.appendChild(valueSpan);
+                    // 添加操作按钮
+                    nodeLine.appendChild(actionsContainer);
                     node.appendChild(nodeLine);
                 }
 
@@ -4158,6 +4399,9 @@
                     }
                     currentJsonData = jsonData;
                     renderJsonTree(jsonData);
+
+                    // 自动滚动到JSON视图位置
+                    jsonViewerSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 } else {
                     controlsBar.style.display = '';
                     outputSection.style.display = '';
@@ -4211,6 +4455,9 @@
                 document.querySelectorAll('.json-search-highlight').forEach(el => {
                     el.classList.remove('json-search-highlight');
                 });
+                document.querySelectorAll('.json-line-highlight').forEach(el => {
+                    el.classList.remove('json-line-highlight');
+                });
 
                 if (!query) {
                     searchMatches = [];
@@ -4229,6 +4476,11 @@
                     regex.lastIndex = 0; // 重置正则索引
                     if (regex.test(text)) {
                         searchMatches.push(el);
+                        // 高亮所有匹配项的行
+                        const nodeLine = el.closest('.json-node-line');
+                        if (nodeLine) {
+                            nodeLine.classList.add('json-line-highlight');
+                        }
                     }
                 });
 
@@ -4251,10 +4503,11 @@
                 }
             }
 
+            // 跳转到下一个匹配项
             function goToNextMatch() {
                 if (searchMatches.length === 0) return;
 
-                // 移除之前的高亮
+                // 移除之前的关键词高亮
                 document.querySelectorAll('.json-search-highlight').forEach(el => {
                     el.classList.remove('json-search-highlight');
                 });
@@ -4272,13 +4525,21 @@
                     parent = parent.parentElement.closest('.json-node.collapsed');
                 }
 
-                // 滚动到视图
-                match.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // 在JSON视图容器内滚动到匹配项
+                const viewerContent = document.querySelector('.json-viewer-content');
+                if (viewerContent && match) {
+                    const viewerRect = viewerContent.getBoundingClientRect();
+                    const matchRect = match.getBoundingClientRect();
+                    const offset = matchRect.top - viewerRect.top - viewerRect.height / 2 + matchRect.height / 2;
+                    viewerContent.scrollTop += offset;
+                }
             }
 
+            // 跳转到上一个匹配项
             function goToPrevMatch() {
                 if (searchMatches.length === 0) return;
 
+                // 移除之前的关键词高亮
                 document.querySelectorAll('.json-search-highlight').forEach(el => {
                     el.classList.remove('json-search-highlight');
                 });
@@ -4295,7 +4556,14 @@
                     parent = parent.parentElement.closest('.json-node.collapsed');
                 }
 
-                match.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // 在JSON视图容器内滚动到匹配项
+                const viewerContent = document.querySelector('.json-viewer-content');
+                if (viewerContent && match) {
+                    const viewerRect = viewerContent.getBoundingClientRect();
+                    const matchRect = match.getBoundingClientRect();
+                    const offset = matchRect.top - viewerRect.top - viewerRect.height / 2 + matchRect.height / 2;
+                    viewerContent.scrollTop += offset;
+                }
             }
 
             document.getElementById('json-search-btn').addEventListener('click', () => {
@@ -4474,6 +4742,7 @@ body {
 </style>
 <style>
     /* 其他链接的样式 */
+
   .friend-links {
     margin-top: 20px;
     font-size: 14px;
@@ -4489,7 +4758,9 @@ body {
 </style>
 <div class="friend-links">
   <a href="https://www.bejson.com/jsonviewernew/" target="_blank" rel="noopener noreferrer">Json在线视图查看器</a> | 
-  <a href="https://www.sojson.com/editor.html" target="_blank" rel="noopener noreferrer">Json视图(Json编辑器)</a>
+  <a href="https://tools.ai225.com/tools/json-tree-viewer/" target="_blank" rel="noopener noreferrer">Json视图(Json编辑器)</a>
 </div>
+   
+ 
 </body>
 </html>
