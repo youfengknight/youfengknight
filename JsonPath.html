@@ -1,0 +1,4495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSONPath 提取器 · 完整层级通配符</title>
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f7f7f8;
+            --bg-tertiary: #f9f9fa;
+            --text-primary: #1d1d1f;
+            --text-secondary: #6e6e73;
+            --text-muted: #86868b;
+            --border-color: #efeff0;
+            --border-light: #e3e3e5;
+            --accent: #1d1d1f;
+            --accent-light: #b0b0b7;
+            --highlight: #ffeb99;
+            --highlight-dark: #b58b1a;
+            --match-bg: #e6f7ff;
+            --match-border: #1890ff;
+            --wildcard-bg: #f0f7ff;
+            --wildcard-border: #1d1d1f;
+            --object-bg: #f5f5f7;
+            --object-border: #6e6e73;
+            --array-bg: #f0f0f2;
+            --array-border: #a0a0a7;
+            --error-bg: #fef2f2;
+            --error-border: #fee2e2;
+            --error-text: #b91c1c;
+            --success-bg: #f0fdf4;
+            --success-border: #bbf7d0;
+            --success-text: #166534;
+            --info-bg: #eff6ff;
+            --info-border: #bfdbfe;
+            --info-text: #1e40af;
+            --shadow: rgba(0, 0, 0, 0.02);
+            --shadow-hover: rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #2c2c2e;
+            --bg-secondary: #1a1a1c;
+            --bg-tertiary: #1d1d1f;
+            --text-primary: #e5e5e7;
+            --text-secondary: #98989e;
+            --text-muted: #5e5e63;
+            --border-color: #3a3a3c;
+            --border-light: #3a3a3c;
+            --accent: #5e5e63;
+            --accent-light: #5e5e63;
+            --highlight: #b58b1a;
+            --highlight-dark: #ffeb99;
+            --match-bg: #1a3a4a;
+            --match-border: #5e9eff;
+            --wildcard-bg: #2c3e4f;
+            --wildcard-border: #5e9eff;
+            --object-bg: #2c2c2e;
+            --object-border: #98989e;
+            --array-bg: #3a3a3c;
+            --array-border: #b0b0b7;
+            --error-bg: #3b1e1e;
+            --error-border: #5e2e2e;
+            --error-text: #ff8a8a;
+            --success-bg: #1a3a2a;
+            --success-border: #2e5e3a;
+            --success-text: #86efac;
+            --info-bg: #1a2a3a;
+            --info-border: #2a4a6a;
+            --info-text: #93c5fd;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --shadow-hover: rgba(0, 0, 0, 0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-secondary);
+            min-height: 100vh;
+            padding: 24px;
+            color: var(--text-primary);
+            line-height: 1.4;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--bg-primary);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px var(--shadow);
+            overflow: hidden;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .header {
+            padding: 28px 32px 20px;
+            border-bottom: 1px solid var(--border-color);
+            transition: border-color 0.2s ease;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            letter-spacing: -0.01em;
+            transition: color 0.2s ease;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-weight: 400;
+            transition: color 0.2s ease;
+        }
+
+        .main-content {
+            padding: 24px 32px 32px;
+        }
+
+        .theme-bar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 16px;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .json-view-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-tertiary);
+            padding: 4px 12px 4px 12px;
+            border-radius: 40px;
+            transition: background-color 0.2s ease;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .json-view-toggle label:first-child {
+            font-weight: 450;
+        }
+
+        .json-viewer-section {
+            background: var(--bg-primary);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .json-viewer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .json-viewer-header h3 {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .json-viewer-toolbar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .json-search-box {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .json-search-box input {
+            padding: 6px 10px;
+            border: 1px solid var(--border-light);
+            border-radius: 4px;
+            font-size: 0.85rem;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            width: 140px;
+        }
+
+        .json-search-box input:focus {
+            outline: none;
+            border-color: var(--accent-light);
+        }
+
+        .json-search-box button {
+            padding: 5px 10px;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s ease;
+        }
+
+        .json-search-box button:hover {
+            background: var(--accent);
+            color: var(--bg-primary);
+        }
+
+        .json-viewer-btn {
+            padding: 6px 14px;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .json-viewer-btn:hover {
+            background: var(--accent);
+            color: var(--bg-primary);
+            border-color: var(--accent);
+        }
+
+        .json-viewer-content {
+            position: relative;
+            max-height: 500px;
+            overflow: auto;
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            background: var(--bg-tertiary);
+        }
+
+        /* JSON 树形样式 */
+        .json-tree {
+            font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            padding: 12px 16px;
+            color: var(--text-primary);
+        }
+
+        .json-node {
+            white-space: nowrap;
+        }
+
+        .json-children {
+            margin-left: 20px;
+            padding-left: 12px;
+            border-left: 1px dashed var(--border-light);
+            max-height: 5000px;
+            overflow: hidden;
+            /* transition: max-height 0.3s ease-out, opacity 0.3s ease-out; */
+            opacity: 1;
+        }
+
+        .json-node.collapsed > .json-children {
+            max-height: 0;
+            opacity: 0;
+            /* transition: max-height 0.25s ease-in, opacity 0.25s ease-in; */
+        }
+
+        .json-node.collapsed .json-preview {
+            display: inline;
+        }
+
+        .json-node.collapsed .json-bracket {
+            display: none;
+        }
+
+        .json-count-badge {
+            color: var(--text-muted);
+            font-size: 0.9em;
+            margin-left: 4px;
+        }
+
+        .json-preview {
+            display: none;
+            color: var(--text-muted);
+            font-style: normal;
+            font-size: 0.9em;
+            margin-left: 2px;
+        }
+
+        .json-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            margin-right: 6px;
+            cursor: pointer;
+            text-align: center;
+            color: #fff;
+            font-size: 16px;
+            font-weight: bold;
+            line-height: 1;
+            user-select: none;
+            vertical-align: middle;
+            border-radius: 4px;
+            background: #4a9eff;
+            border: 1px solid #3d8ce6;
+            box-shadow: 0 1px 3px rgba(74, 158, 255, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .json-toggle:hover {
+            background: #3d8ce6;
+            border-color: #2d7cd6;
+            transform: scale(1.1);
+            box-shadow: 0 2px 6px rgba(74, 158, 255, 0.4);
+        }
+
+        .json-toggle:active {
+            transform: scale(0.95);
+        }
+
+        [data-theme="dark"] .json-toggle {
+            background: #3d8ce6;
+            border-color: #2d7cd6;
+        }
+
+        [data-theme="dark"] .json-toggle:hover {
+            background: #4a9eff;
+            border-color: #3d8ce6;
+        }
+
+        .json-toggle:empty {
+            visibility: hidden;
+        }
+
+        .json-key {
+            color: #881391;
+        }
+
+        [data-theme="dark"] .json-key {
+            color: #9cdcfe;
+        }
+
+        .json-string {
+            color: #1a1aa6;
+        }
+
+        [data-theme="dark"] .json-string {
+            color: #ce9178;
+        }
+
+        .json-number {
+            color: #1c00cf;
+        }
+
+        [data-theme="dark"] .json-number {
+            color: #b5cea8;
+        }
+
+        .json-boolean {
+            color: #0d22aa;
+        }
+
+        [data-theme="dark"] .json-boolean {
+            color: #569cd6;
+        }
+
+        .json-null {
+            color: #808080;
+            font-style: italic;
+        }
+
+        .json-bracket {
+            color: var(--text-muted);
+        }
+
+        [data-theme="dark"] .json-children {
+            border-left-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .json-node-line {
+            padding: 2px 0;
+        }
+
+        .json-node-line:hover {
+            background: var(--bg-secondary);
+            border-radius: 3px;
+        }
+
+        .json-match {
+            background: var(--highlight);
+            border-radius: 2px;
+        }
+
+        .json-search-highlight {
+            background: #ffeb3b;
+            color: #000;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .json-search-highlight {
+            background: #b58b1a;
+            color: #fff;
+        }
+
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-tertiary);
+            padding: 4px;
+            border-radius: 40px;
+            transition: background-color 0.2s ease;
+        }
+
+        .theme-btn {
+            padding: 6px 16px;
+            border: none;
+            background: transparent;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+        }
+
+        .theme-btn.active {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            box-shadow: 0 1px 3px var(--shadow);
+        }
+
+        .input-section {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .input-tabs {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 20px;
+            background: var(--bg-secondary);
+            padding: 4px;
+            border-radius: 10px;
+            width: fit-content;
+            transition: background-color 0.2s ease;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 7px 18px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            transition: all 0.1s ease;
+            font-weight: 450;
+            white-space: nowrap;
+        }
+
+        .tab-btn.active {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            box-shadow: 0 1px 2px var(--shadow);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 16px;
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            font-family: 'SF Mono', 'Monaco', 'Menlo', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            resize: vertical;
+            background: var(--bg-primary);
+            transition: border-color 0.1s, background-color 0.2s ease, color 0.2s ease;
+            color: var(--text-primary);
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-light);
+        }
+
+        .json-input-wrapper {
+            position: relative;
+        }
+
+        .json-input-wrapper textarea {
+            padding-right: 50px;
+        }
+
+        .json-input-copy {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            z-index: 10;
+        }
+
+        .json-input-copy:hover {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: white;
+        }
+
+        .json-input-copy.copied {
+            background: #10b981;
+            border-color: #10b981;
+            color: white;
+        }
+
+        .json-format-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: var(--bg-secondary);
+            border-radius: 8px 8px 0 0;
+            border: 1px solid var(--border-light);
+            border-bottom: none;
+        }
+
+        .json-format-options {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .json-format-label {
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .json-format-option {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .json-format-option:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .json-format-option input[type="radio"] {
+            display: none;
+        }
+
+        .json-format-option.selected {
+            background: var(--accent-primary);
+            color: #01eb37;
+        }
+
+        .json-escape-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .url-input {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .url-input input {
+            flex: 1 1 200px;
+            min-width: 200px;
+            padding: 10px 14px;
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            background: var(--bg-primary);
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+            color: var(--text-primary);
+        }
+
+        .url-input input:focus {
+            outline: none;
+            border-color: var(--accent-light);
+        }
+
+        .url-input button {
+            padding: 10px 22px;
+            background: var(--accent);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 450;
+            transition: background 0.1s;
+            white-space: nowrap;
+        }
+
+        .url-input button:hover {
+            background: var(--text-secondary);
+        }
+
+        .url-input button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            color: var(--error-text);
+            margin-top: 12px;
+            padding: 10px 14px;
+            background: var(--error-bg);
+            border-radius: 10px;
+            font-size: 0.9rem;
+            border: 1px solid var(--error-border);
+            display: none;
+        }
+
+        .error-message.show {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .error-icon {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+        }
+
+        .error-content {
+            flex: 1;
+        }
+
+        .error-title {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .error-suggestion {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 6px;
+        }
+
+        /* 统计面板 */
+        .stats-panel {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px 24px;
+            background: var(--bg-primary);
+            border-radius: 12px;
+            padding: 18px 24px;
+            margin: 16px 0 0 0;
+            border: 1px solid var(--border-color);
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+            font-size: 0.95rem;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-weight: 400;
+            transition: color 0.2s ease;
+        }
+
+        .stat-number {
+            font-weight: 550;
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            line-height: 1.2;
+            transition: color 0.2s ease;
+        }
+
+        .type-dist {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 18px;
+            margin-left: auto;
+        }
+
+        .type-tag {
+            background: var(--bg-tertiary);
+            padding: 5px 14px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            transition: background-color 0.2s ease, color 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .type-tag span {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-left: 6px;
+        }
+
+        .enhanced-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px 20px;
+            padding-top: 12px;
+            margin-top: 12px;
+            border-top: 1px dashed var(--border-color);
+            width: 100%;
+        }
+
+        .stat-badge {
+            background: var(--bg-tertiary);
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .stat-badge span {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-left: 8px;
+        }
+
+        .complexity-meter {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .complexity-bar {
+            width: 60px;
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .complexity-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+
+        .complexity-low { background: #22c55e; }
+        .complexity-medium { background: #f59e0b; }
+        .complexity-high { background: #ef4444; }
+
+        /* 树形结构样式 */
+        .tree-container {
+            padding: 8px 0;
+        }
+
+        .tree-depth-group {
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .tree-depth-header {
+            background: var(--bg-tertiary);
+            padding: 10px 16px;
+            font-weight: 500;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.2s ease;
+        }
+
+        .tree-depth-header:hover {
+            background: var(--bg-secondary);
+        }
+
+        .tree-count {
+            font-weight: 400;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .tree-depth-items {
+            background: var(--bg-primary);
+        }
+
+        .tree-depth-items .jsonpath-item {
+            border-bottom: 1px solid var(--border-color);
+            border-radius: 0;
+            margin: 0;
+        }
+
+        .tree-depth-items .jsonpath-item:last-child {
+            border-bottom: none;
+        }
+
+        .controls-bar {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+            flex-wrap: wrap;
+            background: var(--bg-primary);
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            min-height: 60px;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            height: 38px;
+        }
+
+        .control-group label {
+            font-weight: 450;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            min-width: 44px;
+            transition: color 0.2s ease;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 2px;
+            background: var(--bg-tertiary);
+            padding: 3px;
+            border-radius: 10px;
+            height: 34px;
+            align-items: center;
+            transition: background-color 0.2s ease;
+        }
+
+        .radio-option {
+            padding: 5px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            transition: all 0.1s;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            height: 28px;
+            line-height: 1;
+        }
+
+        .radio-option.selected {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            box-shadow: 0 1px 2px var(--shadow);
+        }
+
+        .radio-option input[type="radio"] {
+            display: none;
+        }
+
+        .wildcard-switch {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            height: 38px;
+        }
+
+        .wildcard-switch label {
+            font-weight: 450;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            transition: color 0.2s ease;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 24px;
+            margin-left: 4px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .2s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .2s;
+            border-radius: 50%;
+        }
+
+        .switch input:checked + .slider {
+            background-color: var(--accent);
+        }
+
+        .switch input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 260px;
+            position: relative;
+            height: 38px;
+        }
+
+        .search-box input {
+            width: 100%;
+            height: 38px;
+            padding: 0 14px 0 38px;
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            font-size: 0.9rem;
+            background: var(--bg-primary);
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+            color: var(--text-primary);
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--accent-light);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-style: normal;
+            font-size: 0.9rem;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            transition: color 0.2s ease;
+        }
+
+        .stats {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            background: var(--bg-tertiary);
+            padding: 8px 16px;
+            border-radius: 40px;
+            white-space: nowrap;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .output-section {
+            background: var(--bg-primary);
+            transition: background-color 0.2s ease;
+        }
+
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            height: 44px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .output-header h3 {
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: color 0.2s ease;
+        }
+
+        .current-mode {
+            background: var(--bg-tertiary);
+            padding: 5px 14px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            font-weight: 400;
+            color: var(--text-secondary);
+            letter-spacing: 0.01em;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .copy-all-btn {
+            padding: 8px 20px;
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.1s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            height: 38px;
+            white-space: nowrap;
+        }
+
+        .copy-all-btn:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--accent-light);
+        }
+
+        .copy-all-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .results-container {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .results-header {
+            background: var(--bg-tertiary);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            height: 50px;
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+
+        .results-header .title {
+            font-weight: 450;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .style-indicator {
+            background: var(--bg-primary);
+            padding: 5px 16px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            height: 34px;
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+
+        .jsonpath-list {
+            max-height: 500px;
+            overflow-y: auto;
+            padding: 8px;
+            background: var(--bg-primary);
+            transition: background-color 0.2s ease;
+        }
+
+        .jsonpath-item {
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.1s, border-color 0.2s ease;
+            font-family: 'SF Mono', 'Monaco', 'Menlo', 'Courier New', monospace;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 8px;
+            margin: 2px 0;
+            color: var(--text-primary);
+            min-height: 46px;
+        }
+
+        .jsonpath-item.wildcard-item {
+            background: var(--wildcard-bg);
+            border-left: 3px solid var(--wildcard-border);
+        }
+
+        .jsonpath-item.object-item {
+            background: var(--object-bg);
+            border-left: 3px solid var(--object-border);
+        }
+
+        .jsonpath-item.array-item {
+            background: var(--array-bg);
+            border-left: 3px solid var(--array-border);
+        }
+
+        .jsonpath-item.expanded {
+            background: var(--bg-tertiary);
+        }
+
+        .jsonpath-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .jsonpath-item .path-text {
+            flex: 1;
+            word-break: break-all;
+            padding-right: 20px;
+            line-height: 1.5;
+        }
+
+        .path-segment {
+            display: inline;
+        }
+
+        .path-segment.field {
+            color: var(--text-primary);
+        }
+
+        .path-segment.index {
+            color: var(--info-text);
+        }
+
+        .path-segment.wildcard {
+            color: var(--error-text);
+            font-weight: 600;
+        }
+
+        .path-segment.operator {
+            color: var(--text-muted);
+        }
+
+        .type-badge {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 20px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            margin-left: 8px;
+            white-space: nowrap;
+        }
+
+        .value-count-badge {
+            background: var(--accent);
+            color: var(--bg-primary);
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 30px;
+            margin-left: 8px;
+            white-space: nowrap;
+        }
+
+        .complexity-badge {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 20px;
+            margin-left: 8px;
+            white-space: nowrap;
+        }
+
+        .complexity-badge.low {
+            background: var(--success-bg);
+            color: var(--success-text);
+        }
+
+        .complexity-badge.medium {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .complexity-badge.high {
+            background: var(--error-bg);
+            color: var(--error-text);
+        }
+
+        .expanded-items {
+            margin-left: 8px;
+            padding: 4px 0 4px 8px;
+            border-left: 3px solid var(--accent-light);
+            margin-bottom: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 0 8px 8px 0;
+        }
+
+        .expanded-item {
+            padding: 8px 12px;
+            margin: 2px 0;
+            border-radius: 6px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.15s ease;
+        }
+
+        .expanded-item:hover {
+            transform: translateX(2px);
+            box-shadow: 0 2px 4px var(--shadow);
+        }
+
+        /* 不同深度的背景颜色 - 浅色模式 */
+        .expanded-item.depth-1 {
+            background: #f0f7ff;
+            border-left: 3px solid #3b82f6;
+        }
+        .expanded-item.depth-2 {
+            background: #f0fdf4;
+            border-left: 3px solid #22c55e;
+        }
+        .expanded-item.depth-3 {
+            background: #fefce8;
+            border-left: 3px solid #eab308;
+        }
+        .expanded-item.depth-4 {
+            background: #fef3f2;
+            border-left: 3px solid #ef4444;
+        }
+
+        /* 深色模式下的深度颜色 */
+        [data-theme="dark"] .expanded-item.depth-1 {
+            background: #1e3a5f;
+            border-left: 3px solid #3b82f6;
+        }
+        [data-theme="dark"] .expanded-item.depth-2 {
+            background: #1a3a2a;
+            border-left: 3px solid #22c55e;
+        }
+        [data-theme="dark"] .expanded-item.depth-3 {
+            background: #3a3520;
+            border-left: 3px solid #eab308;
+        }
+        [data-theme="dark"] .expanded-item.depth-4 {
+            background: #3a2020;
+            border-left: 3px solid #ef4444;
+        }
+
+        .expanded-item .path-content {
+            flex: 1;
+            min-width: 150px;
+            word-break: break-all;
+        }
+
+        .expanded-item .value-preview {
+            max-width: 150px;
+        }
+
+        .expanded-item .type-badge {
+            font-size: 9px;
+            padding: 2px 6px;
+        }
+
+        .search-highlight {
+            background-color: var(--highlight);
+            color: var(--text-primary);
+            font-weight: 500;
+            border-radius: 3px;
+            padding: 0 2px;
+            margin: 0 -1px;
+            box-shadow: 0 0 0 1px rgba(255, 200, 0, 0.2);
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background-color: var(--highlight-dark);
+            color: var(--bg-primary);
+            box-shadow: 0 0 0 1px rgba(255, 200, 0, 0.4);
+        }
+
+        .jsonpath-match-highlight {
+            background-color: var(--match-bg);
+            border-left: 4px solid var(--match-border);
+            font-weight: 500;
+        }
+
+        .jsonpath-item .value-preview {
+            color: var(--text-muted);
+            font-size: 12px;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            background: var(--bg-tertiary);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.4;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            cursor: pointer;
+        }
+
+        .jsonpath-item .value-preview:hover {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        /* 值预览弹窗 */
+        .value-popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+        }
+
+        .value-popup-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .value-popup {
+            background: var(--bg-primary);
+            border-radius: 12px;
+            max-width: 600px;
+            max-height: 80vh;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            transform: scale(0.9);
+            transition: transform 0.2s ease;
+        }
+
+        .value-popup-overlay.active .value-popup {
+            transform: scale(1);
+        }
+
+        .value-popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+        }
+
+        .value-popup-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .value-popup-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: background-color 0.2s ease;
+        }
+
+        .value-popup-close:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .value-popup-copy {
+            background: var(--accent-primary);
+            border: none;
+            color: rgb(0, 0, 0);
+            font-size: 12px;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 6px;
+            transition: background-color 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .value-popup-copy:hover {
+            background: var(--accent-hover);
+        }
+
+        .value-popup-copy.copied {
+            background: #10b981;
+        }
+
+        .value-popup-content {
+            padding: 20px;
+            overflow: auto;
+            max-height: 60vh;
+        }
+
+        .value-popup-content pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-all;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--text-primary);
+        }
+
+        .jsonpath-item .copy-badge {
+            color: var(--text-secondary);
+            font-size: 12px;
+            transition: opacity 0.1s;
+            white-space: nowrap;
+            background: var(--border-color);
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-left: 12px;
+            line-height: 1.4;
+        }
+
+        .jsonpath-item.copied {
+            background: var(--bg-tertiary);
+        }
+
+        .empty-message {
+            padding: 60px 24px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            background: var(--bg-primary);
+            line-height: 1.5;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border-color);
+            border-top: 2px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--accent);
+            color: var(--bg-primary);
+            padding: 10px 20px;
+            border-radius: 40px;
+            animation: fadeIn 0.15s ease;
+            z-index: 1000;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 10px var(--shadow);
+            line-height: 1.5;
+            display: flex;
+            align-items: center;
+        }
+
+        .toast.success {
+            background: #10b981;
+        }
+
+        .toast.error {
+            background: #ef4444;
+        }
+
+        .toast-icon {
+            margin-right: 8px;
+            font-size: 1.1em;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* JSONPath 测试区域样式 */
+        .jsonpath-test-section {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0 16px 0;
+            border: 1px solid var(--border-color);
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .jsonpath-test-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .jsonpath-test-header h4 {
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: color 0.2s ease;
+        }
+
+        .jsonpath-test-input {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .jsonpath-test-input input {
+            flex: 1 1 200px;
+            min-width: 200px;
+            padding: 10px 14px;
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            background: var(--bg-primary);
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+            color: var(--text-primary);
+            font-family: 'SF Mono', 'Monaco', 'Menlo', 'Courier New', monospace;
+        }
+
+        .jsonpath-test-input button {
+            padding: 10px 22px;
+            background: var(--accent);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 450;
+            transition: background 0.1s;
+            white-space: nowrap;
+        }
+
+        .jsonpath-test-input button:hover {
+            background: var(--text-secondary);
+        }
+
+        .jsonpath-test-result {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'SF Mono', 'Monaco', 'Menlo', 'Courier New', monospace;
+            font-size: 13px;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .jsonpath-test-item {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .jsonpath-test-item:last-child {
+            border-bottom: none;
+        }
+
+        .jsonpath-test-item .path {
+            color: var(--info-text);
+            word-break: break-all;
+            flex: 1;
+        }
+
+        .jsonpath-test-item .value {
+            color: var(--text-muted);
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .jsonpath-test-error {
+            color: var(--error-text);
+            padding: 8px 12px;
+            background: var(--error-bg);
+            border-radius: 6px;
+        }
+
+        .jsonpath-test-error .error-type {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .jsonpath-test-error .error-hint {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 6px;
+        }
+
+        /* 语法帮助面板 */
+        .syntax-help {
+            background: var(--info-bg);
+            border: 1px solid var(--info-border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-top: 12px;
+            font-size: 0.85rem;
+            color: var(--info-text);
+        }
+
+        .syntax-help-title {
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .syntax-example {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .syntax-tag {
+            background: var(--bg-primary);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+
+        .syntax-tag:hover {
+            background: var(--bg-tertiary);
+        }
+
+        /* 复杂度详情面板 */
+        .complexity-panel {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin: 16px 0 24px 0;
+            border: 1px solid var(--border-color);
+        }
+
+        .complexity-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .complexity-panel-title {
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        .complexity-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+        }
+
+        .complexity-metric {
+            background: var(--bg-primary);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .complexity-metric-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .complexity-metric-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* 响应式 */
+        @media (max-width: 1024px) {
+            .controls-bar { gap: 16px; }
+            .control-group { width: auto; }
+            .search-box { min-width: 200px; }
+        }
+
+        @media (max-width: 767px) {
+            body { padding: 12px; }
+            .main-content { padding: 16px; }
+            .header { padding: 20px 16px 16px; }
+            .header h1 { font-size: 1.4rem; }
+
+            .input-tabs { width: 100%; }
+            .tab-btn { flex: 1; text-align: center; padding: 7px 8px; font-size: 0.85rem; }
+
+            .controls-bar { gap: 12px; flex-direction: column; align-items: stretch; }
+            .control-group { width: 100%; justify-content: space-between; }
+            .radio-group { width: 100%; }
+            .radio-option { flex: 1; text-align: center; justify-content: center; }
+            .wildcard-switch, .copy-switch { width: 100%; justify-content: space-between; }
+            .search-box { min-width: unset; width: 100%; }
+            .stats { width: 100%; text-align: center; justify-content: center; }
+
+            textarea { height: 150px; }
+            .url-input { flex-direction: column; }
+            .url-input input, .url-input button { width: 100%; }
+            .jsonpath-test-input { flex-direction: column; }
+            .jsonpath-test-input input, .jsonpath-test-input button { width: 100%; }
+
+            .stats-panel { flex-direction: column; gap: 12px; }
+            .type-dist { margin-left: 0; width: 100%; }
+            .enhanced-stats { flex-direction: column; }
+            .stat-badge { width: 100%; }
+
+            .output-header { flex-direction: column; height: auto; align-items: flex-start; }
+            .output-header h3 { width: 100%; justify-content: space-between; }
+            .copy-all-btn { width: 100%; justify-content: center; }
+
+            .results-header { flex-direction: column; height: auto; gap: 8px; align-items: flex-start; }
+            .style-indicator { width: 100%; }
+            .jsonpath-item { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .jsonpath-item .value-preview { max-width: 100%; width: 100%; }
+            .jsonpath-test-item { flex-direction: column; align-items: flex-start; }
+            .jsonpath-test-item .value { max-width: 100%; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 值预览弹窗 -->
+    <div class="value-popup-overlay" id="value-popup-overlay">
+        <div class="value-popup">
+            <div class="value-popup-header">
+                <span class="value-popup-title">完整值预览</span>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button class="value-popup-copy" id="value-popup-copy">📋 复制</button>
+                    <button class="value-popup-close" id="value-popup-close">×</button>
+                </div>
+            </div>
+            <div class="value-popup-content">
+                <pre id="value-popup-content"></pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>JSONPath 字段提取器 · 完整层级通配符</h1>
+            <p>输入 JSON，自动生成所有字段的路径表达式（支持路径复杂度分析），同时增加Json视图，可以展开和收缩🚀</p>
+        </div>
+
+        <div class="main-content">
+            <div class="theme-bar">
+                <!-- <div class="json-view-toggle">
+                    <label>JSON视图</label>
+                    <label class="switch">
+                        <input type="checkbox" id="json-view-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div> -->
+                <div class="theme-toggle">
+                    <button class="theme-btn active" data-theme-btn="light">☀️ 白天</button>
+                    <button class="theme-btn" data-theme-btn="dark">🌙 夜间</button>
+                </div>
+            </div>
+
+            <div class="input-section">
+                <div class="input-tabs">
+                    <button class="tab-btn active" data-tab="json">直接输入</button>
+                    <button class="tab-btn" data-tab="url">从 URL 加载</button>
+                    <button class="tab-btn" data-tab="test">JSONPath 测试</button>
+                </div>
+
+                <div id="json-tab" class="tab-content active">
+                    <div class="json-format-bar">
+                        <div class="json-format-options">
+                            <label class="json-format-label">JSON:</label>
+                            <label class="json-format-option">
+                                <input type="radio" name="json-format" value="preserve" checked>
+                                <span>保持</span>
+                            </label>
+                            <label class="json-format-option">
+                                <input type="radio" name="json-format" value="format">
+                                <span>格式化</span>
+                            </label>
+                            <label class="json-format-option">
+                                <input type="radio" name="json-format" value="compress">
+                                <span>压缩</span>
+                            </label>
+                        </div>
+                        <div class="json-view-toggle">
+                            <label>JSON视图</label>
+                            <label class="switch">
+                                <input type="checkbox" id="json-view-toggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="json-escape-option">
+                            <label class="switch">
+                                <input type="checkbox" id="json-escape-toggle">
+                                <span class="slider"></span>
+                            </label>
+                            <span>JSON转义</span>
+                        </div>
+                    </div>
+                    <div class="json-input-wrapper">
+                        <textarea id="json-input" placeholder='{
+    "store": {
+        "book": [
+            { "title": "Book A", "price": 8.99, "author": "Alice" },
+            { "title": "Book B", "price": 12.99, "author": "Bob" }
+        ]
+    }
+}'>{
+    "store": {
+        "book": [
+            { "title": "Book A", "price": 8.99, "author": "Alice", "tags": ["fiction", "bestseller"] },
+            { "title": "Book B", "price": 12.99, "author": "Bob", "tags": ["tech", "programming"] },
+            { "title": "Book C", "price": 6.99, "author": "Alice", "tags": ["fiction"] }
+        ],
+        "bicycle": {
+            "color": "red",
+            "price": 19.95,
+            "specs": { "weight": "10kg", "speed": "25km/h" }
+        }
+    },
+    "users": [
+        { "name": "John", "age": 30, "active": true },
+        { "name": "Jane", "age": 25, "active": false },
+        { "name": "Bob", "age": 35, "active": true }
+    ]
+}</textarea>
+                        <button class="json-input-copy" id="json-input-copy" title="复制内容">📋</button>
+                    </div>
+                </div>
+
+                <div id="url-tab" class="tab-content">
+                    <div class="url-input">
+                        <input type="url" id="url-input" placeholder="https://api.example.com/data.json" value="https://api.github.com/repos/json-path/JsonPath">
+                        <button id="fetch-btn">获取</button>
+                    </div>
+                </div>
+
+                <div id="test-tab" class="tab-content">
+                    <div class="jsonpath-test-section">
+                        <div class="jsonpath-test-header">
+                            <h4>🔍 JSONPath 表达式测试</h4>
+                        </div>
+                        <div class="jsonpath-test-input">
+                            <input type="text" id="jsonpath-test-input" placeholder="例如: $.store.book[*].title 或 $..price" value="$.store.book[*].title">
+                            <button id="test-btn">测试</button>
+                        </div>
+                        <div id="jsonpath-test-result" class="jsonpath-test-result">
+                            输入 JSONPath 表达式查看匹配结果
+                        </div>
+                        <div class="syntax-help">
+                            <div class="syntax-help-title">支持的语法：</div>
+                            <div class="syntax-example">
+                                <span class="syntax-tag" data-syntax="$">$ 根节点</span>
+                                <span class="syntax-tag" data-syntax="$.field">.field 子属性</span>
+                                <span class="syntax-tag" data-syntax="$['field']">['field'] 括号表示</span>
+                                <span class="syntax-tag" data-syntax="[*]">[*] 通配符</span>
+                                <span class="syntax-tag" data-syntax="..author">.. 递归搜索</span>
+                                <span class="syntax-tag" data-syntax="[:2]">[:2] 数组切片</span>
+                                <span class="syntax-tag" data-syntax="[?(@.price>10)]">[?(@.price>10)] 条件过滤</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="error-message" class="error-message"></div>
+            </div>
+
+            <!-- JSON树形视图查看器 -->
+            <div class="json-viewer-section" id="json-viewer-section" style="display: none;">
+                <div class="json-viewer-header">
+                    <h3>📄 JSON 数据视图</h3>
+                    <div class="json-viewer-toolbar">
+                        <div class="json-search-box">
+                            <input type="text" id="json-search-input" placeholder="查找...">
+                            <button id="json-search-btn">GO</button>
+                            <button id="json-search-prev">▲ 上一个</button>
+                            <button id="json-search-next">▼ 下一个</button>
+                        </div>
+                        <button class="json-viewer-btn" id="json-expand-all">全部展开</button>
+                        <button class="json-viewer-btn" id="json-collapse-all">全部收缩</button>
+                        <button class="json-viewer-btn" id="json-zoom-in" title="放大">🔍+</button>
+                        <button class="json-viewer-btn" id="json-zoom-out" title="缩小">🔍-</button>
+                        <button class="json-viewer-btn" id="json-copy-btn">复制</button>
+                    </div>
+                </div>
+                <div class="json-viewer-content">
+                    <div class="json-tree" id="json-tree"></div>
+                </div>
+            </div>
+
+            <!-- 控制栏 -->
+            <div class="controls-bar" id="controls-bar">
+                <div class="control-group">
+                    <label>显示</label>
+                    <div class="radio-group">
+                        <label class="radio-option selected" data-display="list">
+                            <input type="radio" name="display-mode" value="list" checked> 列表
+                        </label>
+                        <label class="radio-option" data-display="tree">
+                            <input type="radio" name="display-mode" value="tree"> 树形
+                        </label>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>风格</label>
+                    <div class="radio-group">
+                        <label class="radio-option selected" data-style="dot">
+                            <input type="radio" name="path-style" value="dot" checked> 点号
+                        </label>
+                        <label class="radio-option" data-style="bracket">
+                            <input type="radio" name="path-style" value="bracket"> 括号
+                        </label>
+                    </div>
+                </div>
+
+                <div class="wildcard-switch">
+                    <label>通配符模式</label>
+                    <label class="switch">
+                        <input type="checkbox" id="wildcard-toggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="first-item-switch">
+                    <label>仅显示首项</label>
+                    <label class="switch">
+                        <input type="checkbox" id="first-item-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="depth-color-switch">
+                    <label>深度颜色</label>
+                    <label class="switch">
+                        <input type="checkbox" id="depth-color-toggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="copy-switch">
+                    <label>复制开关</label>
+                    <label class="switch">
+                        <input type="checkbox" id="copy-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="search-box">
+                    <i>🔍</i>
+                    <input type="text" id="search-input" placeholder="搜索字段或值">
+                </div>
+
+                <div class="stats" id="stats">
+                    0 个字段
+                </div>
+            </div>
+
+            <div class="output-section" id="output-section">
+                <div class="output-header">
+                    <h3>
+                        提取结果
+                        <span class="current-mode" id="current-mode-label">列表 · 点号</span>
+                    </h3>
+                    <button class="copy-all-btn" id="copy-all-btn">
+                        <span>📋</span> 复制全部
+                    </button>
+                </div>
+
+                <div class="results-container">
+                    <div class="results-header">
+                        <div class="title">
+                            <span id="result-count">0</span> 个字段
+                        </div>
+                        <div class="style-indicator" id="style-indicator">
+                            <span id="style-icon">📋</span>
+                            <span id="style-text">列表 · 点号</span>
+                        </div>
+                    </div>
+                    <div class="jsonpath-list" id="jsonpath-list"></div>
+                </div>
+            </div>
+
+            <!-- 统计面板 - 移至底部 -->
+            <div class="stats-panel" id="statsPanel">
+                <div class="stat-item"><span class="stat-label">📦 对象</span><span class="stat-number" id="statObjects">0</span></div>
+                <div class="stat-item"><span class="stat-label">📚 数组</span><span class="stat-number" id="statArrays">0</span></div>
+                <div class="type-dist" id="typeDistribution"></div>
+                <div class="enhanced-stats" id="enhancedStats">
+                    <div class="stat-badge">平均数组长度 <span id="avgArrayLength">0</span></div>
+                    <div class="stat-badge">重复值 <span id="duplicateCount">0</span></div>
+                </div>
+            </div>
+
+            <!-- 复杂度分析面板 - 移至底部 -->
+            <div class="complexity-panel" id="complexityPanel">
+                <div class="complexity-panel-header">
+                    <span class="complexity-panel-title">📊 路径复杂度分析</span>
+                </div>
+                <div class="complexity-details" id="complexityDetails">
+                    <div class="complexity-metric">
+                        <div class="complexity-metric-value" id="avgDepth">0</div>
+                        <div class="complexity-metric-label">平均深度</div>
+                    </div>
+                    <div class="complexity-metric">
+                        <div class="complexity-metric-value" id="maxDepth">0</div>
+                        <div class="complexity-metric-label">最大深度</div>
+                    </div>
+                    <div class="complexity-metric">
+                        <div class="complexity-metric-value" id="totalPaths">0</div>
+                        <div class="complexity-metric-label">总路径数</div>
+                    </div>
+                    <div class="complexity-metric">
+                        <div class="complexity-metric-value" id="wildcardCount">0</div>
+                        <div class="complexity-metric-label">通配符数量</div>
+                    </div>
+                    <div class="complexity-metric">
+                        <div class="complexity-metric-value" id="arrayAccessCount">0</div>
+                        <div class="complexity-metric-label">数组访问</div>
+                    </div>
+                    <div class="complexity-metric">
+                        <div class="complexity-metric-value" id="complexityScore">0</div>
+                        <div class="complexity-metric-label">复杂度评分</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <!-- 通配符模式显示完整层级：根 → 对象 → 数组 → 通配符 → 字段 | 支持路径复杂度分析 -->
+        </footer>
+    </div>
+
+    <script>
+        /**
+         * JSONPath Extractor - 模块化架构
+         *
+         * 模块结构：
+         * 1. StateManager - 状态管理
+         * 2. ThemeManager - 主题管理
+         * 3. JsonParser - JSON 解析与验证
+         * 4. PathExtractor - 路径提取
+         * 5. ComplexityAnalyzer - 复杂度分析
+         * 6. JsonPathEvaluator - JSONPath 表达式评估
+         * 7. UIRenderer - UI 渲染
+         * 8. EventHandlers - 事件处理
+         */
+
+        // ========================================
+        // 1. 错误处理模块
+        // ========================================
+        const ErrorHandler = {
+            errorMessages: {
+                'Unexpected token': {
+                    title: 'JSON 格式错误',
+                    suggestion: '请检查是否有遗漏的引号、括号或逗号'
+                },
+                'Unexpected end of JSON': {
+                    title: 'JSON 不完整',
+                    suggestion: '可能缺少结束的大括号 ] 或 }，请检查 JSON 是否完整'
+                },
+                'SyntaxError': {
+                    title: 'JSON 语法错误',
+                    suggestion: '请使用标准的 JSON 格式，确保所有字符串都有正确的引号'
+                },
+                'Invalid JSONPath': {
+                    title: '无效的 JSONPath',
+                    suggestion: '请检查 JSONPath 表达式的语法是否正确'
+                },
+                'NetworkError': {
+                    title: '网络请求失败',
+                    suggestion: '请检查 URL 是否正确，或尝试其他数据源'
+                },
+                'CORSError': {
+                    title: '跨域请求被阻止',
+                    suggestion: '无法获取该 URL 的数据，请尝试其他方式输入 JSON'
+                }
+            },
+
+            parseError(error) {
+                const message = error.message;
+                for (const [key, info] of Object.entries(this.errorMessages)) {
+                    if (message.includes(key)) {
+                        return {
+                            title: info.title,
+                            message: message,
+                            suggestion: info.suggestion
+                        };
+                    }
+                }
+                return {
+                    title: '发生错误',
+                    message: message,
+                    suggestion: '请检查输入数据是否正确'
+                };
+            },
+
+            show(targetElement, error) {
+                const errorInfo = this.parseError(error);
+                const errorHtml = `
+                    <svg class="error-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                    <div class="error-content">
+                        <div class="error-title">${errorInfo.title}</div>
+                        <div>${errorInfo.message}</div>
+                        <div class="error-suggestion">💡 ${errorInfo.suggestion}</div>
+                    </div>
+                `;
+                targetElement.innerHTML = errorHtml;
+                targetElement.classList.add('show');
+            },
+
+            hide(targetElement) {
+                targetElement.innerHTML = '';
+                targetElement.classList.remove('show');
+            }
+        };
+
+        // ========================================
+        // 1.5. JSON处理模块
+        // ========================================
+        const JsonProcessor = {
+            // 格式化JSON
+            format(json) {
+                try {
+                    const obj = typeof json === 'string' ? JSON.parse(json) : json;
+                    return JSON.stringify(obj, null, 2);
+                } catch (e) {
+                    return json;
+                }
+            },
+
+            // 压缩JSON
+            compress(json) {
+                try {
+                    const obj = typeof json === 'string' ? JSON.parse(json) : json;
+                    return JSON.stringify(obj);
+                } catch (e) {
+                    return json;
+                }
+            },
+
+            // JSON转义（将JSON字符串转换为转义后的字符串）
+            escape(json) {
+                try {
+                    const str = typeof json === 'string' ? json : JSON.stringify(json);
+                    return str.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
+                } catch (e) {
+                    return json;
+                }
+            },
+
+            // 反转义（将转义后的字符串还原为JSON原始格式）
+            unescape(escaped) {
+                try {
+                    const parsed = JSON.parse(escaped);
+                    // 如果解析结果是字符串（说明原始JSON被转义成了字符串形式），直接返回
+                    if (typeof parsed === 'string') {
+                        return parsed;
+                    }
+                    // 如果是对象，转回JSON字符串
+                    return JSON.stringify(parsed);
+                } catch (e) {
+                    // 如果解析失败，尝试手动反转义
+                    return escaped
+                        .replace(/\\\\/g, '@@BACKSLASH@@')
+                        .replace(/\\n/g, '\n')
+                        .replace(/\\r/g, '\r')
+                        .replace(/\\t/g, '\t')
+                        .replace(/\\"/g, '"')
+                        .replace(/@@BACKSLASH@@/g, '\\');
+                }
+            },
+
+            // 根据设置处理JSON
+            process(json, options = {}) {
+                const format = options.format !== undefined ? options.format : StateManager.get('jsonFormat');
+                const escape = options.escape !== undefined ? options.escape : StateManager.get('jsonEscape');
+
+                if (!json || typeof json !== 'string') return json;
+
+                let result = json;
+
+                // 先反转义（如果当前是转义状态而用户想要非转义）
+                if (this.isEscaped(result)) {
+                    if (!escape) {
+                        result = this.unescape(result);
+                    }
+                } else {
+                    // 如果当前不是转义状态而用户想要转义
+                    if (escape) {
+                        result = this.escape(result);
+                    }
+                }
+
+                // 再进行格式化/压缩处理
+                if (format === 'format') {
+                    result = this.format(result);
+                } else if (format === 'compress') {
+                    result = this.compress(result);
+                }
+
+                return result;
+            },
+
+            // 判断字符串是否已经转义
+            isEscaped(str) {
+                return str.includes('\\n') || str.includes('\\r') || str.includes('\\t') || str.includes('\\\\"') || str.includes('\\\\\\\\');
+            }
+        };
+
+        // ========================================
+        // 2. 状态管理模块
+        // ========================================
+        const StateManager = {
+            state: {
+                currentJson: null,
+                displayMode: 'list',
+                pathStyle: 'dot',
+                allPaths: [],
+                wildcardPaths: [],
+                currentFilter: '',
+                copyEnabled: false,
+                wildcardEnabled: true,
+                expandedWildcards: new Set(),
+                currentJsonPathMatches: [],
+                firstItemOnly: false, // 新增：只显示第一个元素
+                depthColorsEnabled: true, // 新增：深度颜色开关
+                jsonFormat: 'preserve', // json格式化: preserve(保持), format(格式化), compress(压缩)
+                jsonEscape: false, // JSON转义
+                originalJsonBeforeEscape: null, // 转义前的原始JSON
+                complexityMetrics: {
+                    avgDepth: 0,
+                    maxDepth: 0,
+                    totalPaths: 0,
+                    wildcardCount: 0,
+                    arrayAccessCount: 0,
+                    complexityScore: 0
+                }
+            },
+
+            set(key, value) {
+                this.state[key] = value;
+            },
+
+            get(key) {
+                return this.state[key];
+            },
+
+            update(key, updates) {
+                Object.assign(this.state[key], updates);
+            }
+        };
+
+        // ========================================
+        // 3. 主题管理模块
+        // ========================================
+        const ThemeManager = {
+            init() {
+                const savedTheme = localStorage.getItem('jsonpath-theme') || 'light';
+                this.setTheme(savedTheme);
+
+                document.querySelectorAll('[data-theme-btn]').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const theme = e.target.dataset.themeBtn;
+                        this.setTheme(theme);
+                    });
+                });
+            },
+
+            setTheme(theme) {
+                if (theme === 'dark') {
+                    document.body.setAttribute('data-theme', 'dark');
+                } else {
+                    document.body.removeAttribute('data-theme');
+                }
+
+                document.querySelectorAll('[data-theme-btn]').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.themeBtn === theme);
+                });
+
+                localStorage.setItem('jsonpath-theme', theme);
+            }
+        };
+
+        // ========================================
+        // 4. JSON 解析模块
+        // ========================================
+        const JsonParser = {
+            parse(jsonText) {
+                try {
+                    const parsed = JSON.parse(jsonText);
+                    ErrorHandler.hide(document.getElementById('error-message'));
+                    return { success: true, data: parsed };
+                } catch (error) {
+                    ErrorHandler.show(document.getElementById('error-message'), error);
+                    return { success: false, error: error };
+                }
+            },
+
+            validate(jsonText) {
+                try {
+                    JSON.parse(jsonText);
+                    return { valid: true };
+                } catch (error) {
+                    return { valid: false, error: error.message };
+                }
+            },
+
+            stringify(obj, pretty = true) {
+                return pretty ? JSON.stringify(obj, null, 2) : JSON.stringify(obj);
+            }
+        };
+
+        // ========================================
+        // 5. 复杂度分析模块
+        // ========================================
+        const ComplexityAnalyzer = {
+            analyze(paths) {
+                if (!paths || paths.length === 0) {
+                    return {
+                        avgDepth: 0,
+                        maxDepth: 0,
+                        totalPaths: 0,
+                        wildcardCount: 0,
+                        arrayAccessCount: 0,
+                        complexityScore: 0
+                    };
+                }
+
+                let totalDepth = 0;
+                let maxDepth = 0;
+                let wildcardCount = 0;
+                let arrayAccessCount = 0;
+
+                paths.forEach(item => {
+                    const path = item.path || item.wildcardPath || '';
+
+                    // 计算深度（基于 . 和 [ 的数量）
+                    const depth = (path.match(/\.|\[/g) || []).length;
+                    totalDepth += depth;
+                    maxDepth = Math.max(maxDepth, depth);
+
+                    // 统计通配符数量
+                    wildcardCount += (path.match(/\*/g) || []).length;
+
+                    // 统计数组访问数量
+                    arrayAccessCount += (path.match(/\[/g) || []).length;
+                });
+
+                const avgDepth = totalDepth / paths.length;
+
+                // 计算复杂度评分 (0-100)
+                // 考虑因素：平均深度、最大深度、通配符数量、数组访问
+                const complexityScore = Math.min(100, Math.round(
+                    (avgDepth * 10) +
+                    (maxDepth * 5) +
+                    (wildcardCount * 8) +
+                    (arrayAccessCount * 3)
+                ));
+
+                return {
+                    avgDepth: avgDepth.toFixed(1),
+                    maxDepth,
+                    totalPaths: paths.length,
+                    wildcardCount,
+                    arrayAccessCount,
+                    complexityScore
+                };
+            },
+
+            getComplexityLevel(score) {
+                if (score < 30) return 'low';
+                if (score < 60) return 'medium';
+                return 'high';
+            },
+
+            renderMetrics(metrics) {
+                document.getElementById('avgDepth').textContent = metrics.avgDepth;
+                document.getElementById('maxDepth').textContent = metrics.maxDepth;
+                document.getElementById('totalPaths').textContent = metrics.totalPaths;
+                document.getElementById('wildcardCount').textContent = metrics.wildcardCount;
+                document.getElementById('arrayAccessCount').textContent = metrics.arrayAccessCount;
+
+                const scoreEl = document.getElementById('complexityScore');
+                scoreEl.textContent = metrics.complexityScore;
+
+                // 更新复杂度评分颜色
+                const level = this.getComplexityLevel(metrics.complexityScore);
+                scoreEl.className = `complexity-metric-value complexity-${level}`;
+            }
+        };
+
+        // ========================================
+        // 6. 路径提取模块
+        // ========================================
+        const PathExtractor = {
+    extract(json) {
+        const allPaths = [];
+        const wildcardMap = new Map();
+
+        const addToWildcardMap = (path, value, type) => {
+            if (!StateManager.get('wildcardEnabled')) return;
+
+            if (!wildcardMap.has(path)) {
+                wildcardMap.set(path, {
+                    path: path,
+                    values: [],
+                    type: type,
+                    isWildcard: true,
+                    valueCount: 0,
+                    value: value // 保存完整的数组/对象值
+                });
+            }
+
+            const isLeaf = value === null || typeof value !== 'object' ||
+                          (Array.isArray(value) && value.length === 0) ||
+                          (!Array.isArray(value) && typeof value === 'object' && Object.keys(value).length === 0);
+
+            if (isLeaf) {
+                wildcardMap.get(path).values.push(value);
+            }
+        };
+
+        const traverse = (obj, currentPath, wildcardPath, depth = 0, arrayIndex = null) => {
+            if (depth > 0) {
+                if (Array.isArray(obj)) {
+                    addToWildcardMap(wildcardPath, obj, 'array');
+                } else if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+                    addToWildcardMap(wildcardPath, obj, 'object');
+                }
+            }
+
+            if (obj === null || typeof obj !== 'object') {
+                allPaths.push({
+                    path: currentPath,
+                    wildcardPath: wildcardPath,
+                    value: obj,
+                    type: typeof obj,
+                    isWildcard: false,
+                    arrayIndex: arrayIndex // 记录数组索引
+                });
+                addToWildcardMap(wildcardPath, obj, typeof obj);
+                return;
+            }
+
+            if (Array.isArray(obj)) {
+                allPaths.push({
+                    path: currentPath,
+                    wildcardPath: wildcardPath,
+                    value: obj,
+                    type: 'array',
+                    isWildcard: false,
+                    arrayIndex: arrayIndex
+                });
+
+                if (obj.length === 0) {
+                    addToWildcardMap(wildcardPath + '[*]', [], 'array');
+                } else {
+                    obj.forEach((item, index) => {
+                        const newPath = `${currentPath}[${index}]`;
+                        const newWildcardPath = wildcardPath + '[*]';
+                        traverse(item, newPath, newWildcardPath, depth + 1, index);
+                    });
+                }
+            } else {
+                allPaths.push({
+                    path: currentPath,
+                    wildcardPath: wildcardPath,
+                    value: obj,
+                    type: 'object',
+                    isWildcard: false,
+                    arrayIndex: arrayIndex
+                });
+
+                const keys = Object.keys(obj);
+                if (keys.length === 0) {
+                    addToWildcardMap(wildcardPath, {}, 'object');
+                } else {
+                    keys.forEach(key => {
+                        const pathStyle = StateManager.get('pathStyle');
+                        const newPath = pathStyle === 'dot' ?
+                            `${currentPath}.${key}` :
+                            `${currentPath}['${key}']`;
+                        const newWildcardPath = wildcardPath ?
+                            (pathStyle === 'dot' ? `${wildcardPath}.${key}` : `${wildcardPath}['${key}']`) :
+                            (pathStyle === 'dot' ? `$.${key}` : `$['${key}']`);
+                        traverse(obj[key], newPath, newWildcardPath, depth + 1, arrayIndex);
+                    });
+                }
+            }
+        };
+
+        traverse(json, '$', '$', 0);
+
+        const wildcardPaths = Array.from(wildcardMap.values()).map(item => ({
+            ...item,
+            valueCount: item.values.length,
+            valuePreview: item.values.length > 0 ? this.formatValue(item.values[0]) :
+                          (item.type === 'array' ? '[]' :
+                           item.type === 'object' ? '{}' : String(item.values[0]))
+        }));
+
+        wildcardPaths.sort((a, b) => {
+            const aDepth = (a.path.match(/\.|\[/g) || []).length;
+            const bDepth = (b.path.match(/\.|\[/g) || []).length;
+            return aDepth - bDepth;
+        });
+
+        StateManager.set('allPaths', allPaths);
+        StateManager.set('wildcardPaths', wildcardPaths);
+
+        return { allPaths, wildcardPaths };
+    },
+
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+
+            formatValue(value) {
+                if (value === null) return 'null';
+                if (value === undefined) return 'undefined';
+                if (typeof value === 'string') {
+                    if (value.length > 30) return `"${value.substring(0, 30)}…"`;
+                    return `"${value}"`;
+                }
+                if (typeof value === 'object') {
+                    if (Array.isArray(value)) {
+                        return `Array[${value.length}]`;
+                    }
+                    try {
+                        const str = JSON.stringify(value);
+                        if (str.length > 30) return str.substring(0, 30) + '…';
+                        return str;
+                    } catch {
+                        return String(value);
+                    }
+                }
+                return String(value);
+            },
+
+            // 获取完整值（用于弹窗显示）
+            getFullValue(value) {
+                if (value === null) return 'null';
+                if (value === undefined) return 'undefined';
+                if (typeof value === 'object') {
+                    try {
+                        return JSON.stringify(value, null, 2);
+                    } catch {
+                        return String(value);
+                    }
+                }
+                return String(value);
+            },
+
+            calculateComplexity(path) {
+                let score = 0;
+
+                // 深度加分
+                const depth = (path.match(/\.|\[/g) || []).length;
+                score += depth * 10;
+
+                // 通配符加分
+                const wildcards = (path.match(/\*/g) || []).length;
+                score += wildcards * 15;
+
+                // 数组访问加分
+                const arrays = (path.match(/\[/g) || []).length;
+                score += arrays * 5;
+
+                // 递归下降加分
+                if (path.includes('..')) {
+                    score += 20;
+                }
+
+                return Math.min(100, score);
+            },
+
+            getComplexityLevel(score) {
+                if (score < 30) return 'low';
+                if (score < 60) return 'medium';
+                return 'high';
+            }
+        };
+
+        // ========================================
+        // 7. JSONPath 评估模块（增强版）
+        // ========================================
+        const JsonPathEvaluator = {
+            evaluate(obj, expr) {
+                const matches = [];
+
+                // 移除开头的 $
+                let path = expr.replace(/^\$\.?/, '');
+
+                // 解析表达式
+                const segments = this.parsePath(path);
+
+                this.traverse(obj, '', segments, 0, matches);
+
+                return matches;
+            },
+
+            parsePath(pathStr) {
+                const segments = [];
+                let i = 0;
+
+                while (i < pathStr.length) {
+                    if (pathStr[i] === '.') {
+                        i++;
+                        if (pathStr[i] === '.') {
+                            // 递归下降 ..
+                            segments.push({ type: 'recursive', value: '..' });
+                            i++;
+                        } else {
+                            let field = '';
+                            while (i < pathStr.length && pathStr[i] !== '.' && pathStr[i] !== '[' && pathStr[i] !== '*') {
+                                field += pathStr[i];
+                                i++;
+                            }
+                            if (field) segments.push({ type: 'field', value: field });
+                        }
+                    } else if (pathStr[i] === '[') {
+                        i++;
+
+                        // 检查条件表达式 [?(@.field op value)]
+                        if (pathStr[i] === '?') {
+                            i++;
+                            const condition = this.parseCondition(pathStr, i);
+                            segments.push({ type: 'condition', value: condition });
+                            i = condition.endIndex;
+                            continue;
+                        }
+
+                        // 检查数组切片 [start:end:step]
+                        if (pathStr[i] === ':') {
+                            const slice = this.parseSlice(pathStr, i);
+                            segments.push({ type: 'slice', value: slice });
+                            i = slice.endIndex;
+                            continue;
+                        }
+
+                        // 通配符 [*]
+                        if (pathStr[i] === '*') {
+                            segments.push({ type: 'wildcard', value: '*' });
+                            i += 2;
+                            continue;
+                        }
+
+                        // 括号字段名 ['name']
+                        if (pathStr[i] === "'") {
+                            i++;
+                            let field = '';
+                            while (i < pathStr.length && pathStr[i] !== "'") {
+                                field += pathStr[i];
+                                i++;
+                            }
+                            segments.push({ type: 'field', value: field });
+                            i += 2;
+                            continue;
+                        }
+
+                        // 数字索引或切片
+                        let numStr = '';
+                        while (i < pathStr.length && pathStr[i] !== ']') {
+                            numStr += pathStr[i];
+                            i++;
+                        }
+
+                        // 检查是否包含冒号（切片）
+                        if (numStr.includes(':')) {
+                            const slice = this.parseSliceFromString(numStr);
+                            segments.push({ type: 'slice', value: slice });
+                        } else {
+                            segments.push({ type: 'index', value: parseInt(numStr) });
+                        }
+                        i++;
+                    } else if (pathStr[i] === '*') {
+                        segments.push({ type: 'wildcard', value: '*' });
+                        i++;
+                    } else {
+                        // 普通字段名
+                        let field = '';
+                        while (i < pathStr.length && pathStr[i] !== '.' && pathStr[i] !== '[' && pathStr[i] !== '*') {
+                            field += pathStr[i];
+                            i++;
+                        }
+                        if (field) segments.push({ type: 'field', value: field });
+                    }
+                }
+
+                return segments;
+            },
+
+            parseCondition(str, startIndex) {
+                let i = startIndex;
+                let condition = '';
+
+                // 跳过 @.
+                if (str[i] === '@') {
+                    i++;
+                    if (str[i] === '.') i++;
+                }
+
+                // 读取字段名
+                while (i < str.length && str[i] !== ']' && str[i] !== '<' && str[i] !== '>' && str[i] !== '=' && str[i] !== '!') {
+                    condition += str[i];
+                    i++;
+                }
+
+                // 读取操作符和值
+                while (i < str.length && str[i] !== ']') {
+                    condition += str[i];
+                    i++;
+                }
+
+                return {
+                    field: condition.match(/@\.(\w+)/)?.[1] || '',
+                    operator: condition.match(/([<>!=]+)/)?.[1] || '',
+                    value: condition.match(/([<>!=]+)(.+)/)?.[2] || '',
+                    endIndex: i + 1
+                };
+            },
+
+            parseSlice(str, startIndex) {
+                let i = startIndex;
+                let sliceStr = ':';
+
+                while (i < str.length && str[i] !== ']') {
+                    sliceStr += str[i];
+                    i++;
+                }
+
+                return {
+                    ...this.parseSliceFromString(sliceStr),
+                    endIndex: i + 1
+                };
+            },
+
+            parseSliceFromString(str) {
+                const parts = str.split(':');
+                return {
+                    start: parts[1] ? (parts[0] === '' ? 0 : parseInt(parts[0])) : 0,
+                    end: parts[1] ? (parts[2] ? parseInt(parts[2]) : parts[1] === '' ? undefined : parseInt(parts[1])) : undefined,
+                    step: parts[2] ? parseInt(parts[2]) : 1
+                };
+            },
+
+            evaluateCondition(value, condition) {
+                const fieldValue = this.getNestedValue(value, condition.field);
+                let targetValue = condition.value.trim();
+
+                // 类型转换
+                if (!isNaN(targetValue) && targetValue !== '') {
+                    targetValue = parseFloat(targetValue);
+                } else if (targetValue === 'true') {
+                    targetValue = true;
+                } else if (targetValue === 'false') {
+                    targetValue = false;
+                } else if (targetValue.startsWith('"') && targetValue.endsWith('"')) {
+                    targetValue = targetValue.slice(1, -1);
+                }
+
+                switch (condition.operator) {
+                    case '>': return fieldValue > targetValue;
+                    case '>=': return fieldValue >= targetValue;
+                    case '<': return fieldValue < targetValue;
+                    case '<=': return fieldValue <= targetValue;
+                    case '==': return fieldValue == targetValue;
+                    case '===': return fieldValue === targetValue;
+                    case '!=': return fieldValue != targetValue;
+                    case '!==': return fieldValue !== targetValue;
+                    default: return false;
+                }
+            },
+
+            getNestedValue(obj, path) {
+                const parts = path.split('.');
+                let current = obj;
+                for (const part of parts) {
+                    if (current && typeof current === 'object') {
+                        current = current[part];
+                    } else {
+                        return undefined;
+                    }
+                }
+                return current;
+            },
+
+            traverse(current, currentPath, segments, index, matches) {
+                if (index >= segments.length) {
+                    matches.push({
+                        path: '$' + currentPath,
+                        value: current
+                    });
+                    return;
+                }
+
+                const seg = segments[index];
+
+                if (seg.type === 'recursive') {
+                    const recursiveSearch = (obj, objPath) => {
+                        if (!obj || typeof obj !== 'object') return;
+
+                        if (Array.isArray(obj)) {
+                            obj.forEach((item, idx) => {
+                                const newPath = `${objPath}[${idx}]`;
+                                this.traverse(item, newPath, segments, index + 1, matches);
+                                recursiveSearch(item, newPath);
+                            });
+                        } else {
+                            Object.keys(obj).forEach(key => {
+                                const value = obj[key];
+                                const newPath = `${objPath}.${key}`;
+                                this.traverse(value, newPath, segments, index + 1, matches);
+                                recursiveSearch(value, newPath);
+                            });
+                        }
+                    };
+                    recursiveSearch(current, currentPath);
+                } else if (seg.type === 'condition') {
+                    // 条件过滤
+                    if (Array.isArray(current)) {
+                        current.forEach((item, idx) => {
+                            if (this.evaluateCondition(item, seg.value)) {
+                                const newPath = `${currentPath}[${idx}]`;
+                                this.traverse(item, newPath, segments, index + 1, matches);
+                            }
+                        });
+                    }
+                } else if (seg.type === 'slice') {
+                    // 数组切片
+                    if (Array.isArray(current)) {
+                        const { start, end, step } = seg.value;
+                        const sliced = current.slice(start, end);
+                        sliced.forEach((item, idx) => {
+                            const newPath = `${currentPath}[${start + idx * step}]`;
+                            this.traverse(item, newPath, segments, index + 1, matches);
+                        });
+                    }
+                } else {
+                    if (!current || typeof current !== 'object') return;
+
+                    if (Array.isArray(current)) {
+                        if (seg.type === 'wildcard') {
+                            current.forEach((item, idx) => {
+                                const newPath = `${currentPath}[${idx}]`;
+                                this.traverse(item, newPath, segments, index + 1, matches);
+                            });
+                        } else if (seg.type === 'index') {
+                            const idx = seg.value;
+                            if (idx >= 0 && idx < current.length) {
+                                const newPath = `${currentPath}[${idx}]`;
+                                this.traverse(current[idx], newPath, segments, index + 1, matches);
+                            }
+                        } else if (seg.type === 'field') {
+                            current.forEach((item, idx) => {
+                                if (item && typeof item === 'object' && seg.value in item) {
+                                    const newPath = `${currentPath}[${idx}]`;
+                                    this.traverse(item[seg.value], newPath, segments, index + 1, matches);
+                                }
+                            });
+                        }
+                    } else {
+                        if (seg.type === 'field') {
+                            if (seg.value in current) {
+                                const newPath = `${currentPath}.${seg.value}`;
+                                this.traverse(current[seg.value], newPath, segments, index + 1, matches);
+                            }
+                        } else if (seg.type === 'wildcard') {
+                            Object.keys(current).forEach(key => {
+                                const newPath = `${currentPath}.${key}`;
+                                this.traverse(current[key], newPath, segments, index + 1, matches);
+                            });
+                        }
+                    }
+                }
+            }
+        };
+
+        // ========================================
+        // 8. UI 渲染模块
+        // ========================================
+        const UIRenderer = {
+            getTypeIcon(type) {
+                const icons = {
+                    'object': '📦',
+                    'array': '📚',
+                    'string': '📝',
+                    'number': '🔢',
+                    'boolean': '✓',
+                    'null': '∅'
+                };
+                return icons[type] || '📄';
+            },
+
+            highlightText(text, filter) {
+                if (!filter) return this.escapeHtml(text);
+                const escapedFilter = filter.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(`(${escapedFilter})`, 'gi');
+                const parts = text.split(regex);
+                return parts.map((part, i) => {
+                    if (part.toLowerCase() === filter.toLowerCase()) {
+                        return `<span class="search-highlight">${this.escapeHtml(part)}</span>`;
+                    }
+                    return this.escapeHtml(part);
+                }).join('');
+            },
+
+            escapeHtml(text) {
+                if (text === null || text === undefined) return '';
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            },
+
+            // 安全存储完整值到 data 属性
+            safeFullValue(value) {
+                if (value === null || value === undefined) return '';
+                // 使用 encodeURIComponent 避免 HTML 属性截断问题
+                return encodeURIComponent(value);
+            },
+
+            // 从 data 属性安全获取完整值
+            safeGetFullValue(encoded) {
+                if (!encoded) return '';
+                try {
+                    return decodeURIComponent(encoded);
+                } catch {
+                    return encoded;
+                }
+            },
+
+            highlightPath(path, pathStyle, filter) {
+                // 高亮路径的不同部分
+                let html = '';
+                let current = '';
+                let inBracket = false;
+                let bracketContent = '';
+
+                const applySearchHighlight = (text) => {
+                    if (!filter) return this.escapeHtml(text);
+                    return this.highlightText(text, filter);
+                };
+
+                for (let i = 0; i < path.length; i++) {
+                    const char = path[i];
+
+                    if (char === '[') {
+                        if (current) {
+                            html += `<span class="path-segment field">${applySearchHighlight(current)}</span>`;
+                            current = '';
+                        }
+                        inBracket = true;
+                        bracketContent = '[';
+                    } else if (char === ']') {
+                        bracketContent += ']';
+
+                        // 判断括号内容类型
+                        if (bracketContent === '[*]') {
+                            html += `<span class="path-segment wildcard">${applySearchHighlight(bracketContent)}</span>`;
+                        } else if (/^\[\d+\]$/.test(bracketContent)) {
+                            html += `<span class="path-segment index">${applySearchHighlight(bracketContent)}</span>`;
+                        } else {
+                            html += `<span class="path-segment index">${applySearchHighlight(bracketContent)}</span>`;
+                        }
+                        inBracket = false;
+                        bracketContent = '';
+                    } else if (inBracket) {
+                        bracketContent += char;
+                    } else if (char === '.') {
+                        if (current) {
+                            html += `<span class="path-segment field">${applySearchHighlight(current)}</span>`;
+                            current = '';
+                        }
+                        html += `<span class="path-segment operator">.</span>`;
+                    } else {
+                        current += char;
+                    }
+                }
+
+                if (current) {
+                    html += `<span class="path-segment field">${applySearchHighlight(current)}</span>`;
+                }
+
+                return html;
+            },
+
+            renderListMode(paths, filter) {
+                let html = '';
+
+                // 获取所有已展开的通配符路径
+                const expandedWildcards = Array.from(StateManager.get('expandedWildcards') || []);
+
+                paths.forEach(item => {
+                    // 检查是否是已展开路径的子路径，如果是则跳过渲染
+                    // 保留已展开路径本身的渲染（因为它们是展开的入口）
+                    if (expandedWildcards.length > 0) {
+                        const isChildOfExpanded = expandedWildcards.some(expandedPath =>
+                            item.path.startsWith(expandedPath) && item.path !== expandedPath
+                        );
+                        if (isChildOfExpanded) {
+                            return; // 跳过这个子路径，因为它已经在展开区域显示了
+                        }
+                    }
+
+                    const isMatched = !item.isWildcard && StateManager.get('currentJsonPathMatches').some(m => m.path === item.path);
+                    const matchClass = isMatched ? 'jsonpath-match-highlight' : '';
+
+                    if (item.isWildcard) {
+                        const isExpanded = StateManager.get('expandedWildcards').has(item.path);
+                        const typeIcon = this.getTypeIcon(item.type);
+                        const typeBadge = `<span class="type-badge">${typeIcon} ${item.type}</span>`;
+
+                        let valuePreview = '';
+                        let fullValue = '';
+                        if (item.type === 'array') {
+                            valuePreview = item.value !== undefined && Array.isArray(item.value) ? `Array[${item.value.length}]` : `Array[${item.values?.length || 0}]`;
+                            fullValue = item.value !== undefined ? PathExtractor.getFullValue(item.value) : (item.values?.length > 0 ? PathExtractor.getFullValue(item.values[0]) : '[]');
+                        } else if (item.type === 'object') {
+                            valuePreview = `Object`;
+                            fullValue = item.value !== undefined ? PathExtractor.getFullValue(item.value) : (item.values?.length > 0 ? PathExtractor.getFullValue(item.values[0]) : '{}');
+                        } else {
+                            valuePreview = item.valueCount > 0 ? `${item.valueCount} 个值` : '0 个值';
+                            fullValue = item.values?.length > 0 ? PathExtractor.getFullValue(item.values[0]) : '';
+                        }
+
+                        const highlightedPath = this.highlightPath(item.path, StateManager.get('pathStyle'), filter);
+                        const copyBadge = StateManager.get('copyEnabled') ? `<span class="copy-badge">复制</span>` : '';
+                        const expandIcon = (item.type === 'array' || item.type === 'object') ?
+                            (isExpanded ? '▼' : '▶') : '';
+
+                        // 复杂度徽章
+                        const complexityScore = PathExtractor.calculateComplexity(item.path);
+                        const complexityLevel = PathExtractor.getComplexityLevel(complexityScore);
+
+                        let typeClass = '';
+                        if (item.type === 'object') typeClass = 'object-item';
+                        else if (item.type === 'array') typeClass = 'array-item';
+                        else typeClass = 'wildcard-item';
+
+                        html += `
+                            <div class="jsonpath-item ${typeClass} ${isExpanded ? 'expanded' : ''} ${matchClass}" data-path="${this.escapeHtml(item.path)}">
+                                <span class="path-text">
+                                    ${expandIcon ? `<span class="expand-toggle" data-path="${this.escapeHtml(item.path)}" style="cursor: pointer; margin-right: 8px; display: inline-block; width: 20px;">${expandIcon}</span>` : ''}
+                                    ${highlightedPath}
+                                    ${typeBadge}
+                                    <span class="complexity-badge ${complexityLevel}">复杂度 ${complexityScore}</span>
+                                    ${item.valueCount > 0 ? `<span class="value-count-badge">${item.valueCount}</span>` : ''}
+                                </span>
+                                <span class="value-preview" title="${this.escapeHtml(fullValue || valuePreview)}" data-full-value="${this.safeFullValue(fullValue)}">${valuePreview}</span>
+                                ${copyBadge}
+                            </div>
+                        `;
+
+                        if (isExpanded) {
+                            let childPaths = StateManager.get('allPaths').filter(p =>
+                                p.path.startsWith(item.path) && p.path !== item.path
+                            );
+
+                            // 如果开启了"仅显示首项"，过滤子路径
+                            if (StateManager.get('firstItemOnly')) {
+                                // 只保留数组索引为0或非数组索引的路径
+                                childPaths = childPaths.filter(p => {
+                                    // 检查路径中是否包含非0的数组索引
+                                    const matches = p.path.match(/\[(\d+)\]/g);
+                                    if (matches) {
+                                        // 如果有数组索引，检查是否都是[0]
+                                        return matches.every(m => m === '[0]' || m === '[*]');
+                                    }
+                                    return true;
+                                });
+                            }
+
+                            if (childPaths.length > 0) {
+                                html += '<div class="expanded-items">';
+
+                                // 计算父项深度
+                                const parentDepth = (item.path.match(/\.|\[/g) || []).length;
+
+                                childPaths.slice(0, 15).forEach((child) => {
+                                    const childValue = PathExtractor.formatValue(child.value);
+                                    const childMatched = StateManager.get('currentJsonPathMatches').some(m => m.path === child.path);
+                                    const childMatchClass = childMatched ? 'jsonpath-match-highlight' : '';
+
+                                    // 计算子项深度并计算缩进
+                                    const childDepth = (child.path.match(/\.|\[/g) || []).length;
+                                    const relativeDepth = childDepth - parentDepth;
+                                    const indent = relativeDepth * 24; // 每层缩进24px
+
+                                    // 根据相对深度获取背景颜色类（仅当开启深度颜色时）
+                                    const depthClass = StateManager.get('depthColorsEnabled') ? `depth-${Math.min(relativeDepth, 4)}` : '';
+
+                                    // 获取子项类型图标
+                                    const childTypeIcon = this.getTypeIcon(child.type);
+                                    const childFullValue = PathExtractor.getFullValue(child.value);
+
+                                    html += `
+                                        <div class="expanded-item ${childMatchClass} ${depthClass}" data-path="${this.escapeHtml(child.path)}" style="padding-left: ${indent}px;">
+                                            <span class="path-content">${this.highlightPath(child.path, StateManager.get('pathStyle'), filter)}</span>
+                                            <span class="type-badge">${childTypeIcon} ${child.type}</span>
+                                            <span class="value-preview" title="${this.escapeHtml(childFullValue)}" data-full-value="${this.safeFullValue(childFullValue)}">${childValue}</span>
+                                        </div>
+                                    `;
+                                });
+                                if (childPaths.length > 15) {
+                                    html += `<div class="expanded-item" style="color: var(--text-muted); font-style: italic;">... 还有 ${childPaths.length - 15} 个子路径</div>`;
+                                }
+                                html += '</div>';
+                            }
+                        }
+                    } else if (!StateManager.get('wildcardEnabled')) {
+                        // 如果开启了"仅显示首项"，检查是否应该跳过
+                        if (StateManager.get('firstItemOnly')) {
+                            const matches = item.path.match(/\[(\d+)\]/g);
+                            if (matches && !matches.every(m => m === '[0]')) {
+                                return; // 跳过包含非0数组索引的路径
+                            }
+                        }
+
+                        const valuePreview = PathExtractor.formatValue(item.value);
+                        const fullValue = PathExtractor.getFullValue(item.value);
+                        const typeIcon = this.getTypeIcon(item.type);
+
+                        const highlightedPath = this.highlightPath(item.path, StateManager.get('pathStyle'), filter);
+                        const copyBadge = StateManager.get('copyEnabled') ? `<span class="copy-badge">复制</span>` : '';
+                        const typeBadge = `<span class="type-badge">${typeIcon} ${item.type}</span>`;
+
+                        html += `
+                            <div class="jsonpath-item ${matchClass}" data-path="${this.escapeHtml(item.path)}">
+                                <span class="path-text">${highlightedPath} ${typeBadge}</span>
+                                <span class="value-preview" title="${this.escapeHtml(fullValue)}" data-full-value="${this.safeFullValue(fullValue)}">${valuePreview}</span>
+                                ${copyBadge}
+                            </div>
+                        `;
+                    }
+                });
+
+                return html;
+            },
+
+            renderTreeMode() {
+                const wildcardEnabled = StateManager.get('wildcardEnabled');
+                const paths = wildcardEnabled ? StateManager.get('wildcardPaths') : StateManager.get('allPaths');
+                const filter = StateManager.get('currentFilter');
+
+                // 按路径深度分组显示
+                const groupedByDepth = this.groupPathsByDepth(paths);
+
+                let html = '<div class="tree-container">';
+
+                // 渲染深度层级
+                Object.keys(groupedByDepth).sort((a, b) => a - b).forEach(depth => {
+                    const items = groupedByDepth[depth];
+                    html += `<div class="tree-depth-group" data-depth="${depth}">`;
+                    html += `<div class="tree-depth-header">📊 深度 ${depth} <span class="tree-count">(${items.length} 项)</span></div>`;
+                    html += '<div class="tree-depth-items">';
+
+                    items.forEach(item => {
+                        const path = item.path || item.wildcardPath;
+                        const typeIcon = this.getTypeIcon(item.type);
+                        const isMatched = !item.isWildcard && StateManager.get('currentJsonPathMatches').some(m => m.path === item.path);
+                        const matchClass = isMatched ? 'jsonpath-match-highlight' : '';
+
+                        let typeClass = '';
+                        if (item.type === 'object') typeClass = 'object-item';
+                        else if (item.type === 'array') typeClass = 'array-item';
+                        else typeClass = 'wildcard-item';
+
+                        // 区分 wildcard 项和普通项，获取完整值
+                        let fullValue;
+                        if (item.isWildcard) {
+                            // wildcard 项使用 values 数组
+                            if (item.type === 'array') {
+                                fullValue = item.value !== undefined ? PathExtractor.getFullValue(item.value) : (item.values?.length > 0 ? PathExtractor.getFullValue(item.values[0]) : '[]');
+                            } else if (item.type === 'object') {
+                                fullValue = item.value !== undefined ? PathExtractor.getFullValue(item.value) : (item.values?.length > 0 ? PathExtractor.getFullValue(item.values[0]) : '{}');
+                            } else {
+                                fullValue = item.values?.length > 0 ? PathExtractor.getFullValue(item.values[0]) : '';
+                            }
+                        } else {
+                            // 普通项直接使用 item.value
+                            fullValue = PathExtractor.getFullValue(item.value);
+                        }
+
+                        const valuePreview = item.type === 'array' ? (item.value !== undefined ? `Array[${Array.isArray(item.value) ? item.value.length : (item.values?.length || 0)}]` : `Array[${item.values?.length || 0}]`) :
+                                            item.type === 'object' ? 'Object' :
+                                            item.valueCount > 0 ? `${item.valueCount} 个值` : PathExtractor.formatValue(item.value);
+
+                        const copyBadge = StateManager.get('copyEnabled') ? `<span class="copy-badge">复制</span>` : '';
+
+                        html += `
+                            <div class="jsonpath-item ${typeClass} ${matchClass}" data-path="${this.escapeHtml(path)}">
+                                <span class="path-text">${this.highlightPath(path, StateManager.get('pathStyle'), filter)}</span>
+                                <span class="type-badge">${typeIcon} ${item.type}</span>
+                                <span class="value-preview" title="${this.escapeHtml(fullValue || valuePreview)}" data-full-value="${this.safeFullValue(fullValue)}">${valuePreview}</span>
+                                ${item.valueCount > 0 ? `<span class="value-count-badge">${item.valueCount}</span>` : ''}
+                                ${copyBadge}
+                            </div>
+                        `;
+                    });
+
+                    html += '</div></div>';
+                });
+
+                html += '</div>';
+                return html;
+            },
+
+            groupPathsByDepth(paths) {
+                const groups = {};
+                paths.forEach(item => {
+                    const path = item.path || item.wildcardPath;
+                    // 计算深度：基于 . 和 [ 的数量
+                    const depth = (path.match(/\.|\[/g) || []).length;
+                    if (!groups[depth]) groups[depth] = [];
+                    groups[depth].push(item);
+                });
+                return groups;
+            },
+
+            updateStatsPanel(stats) {
+                document.getElementById('statObjects').textContent = stats.objCount;
+                document.getElementById('statArrays').textContent = stats.arrCount;
+
+                const typeDistDiv = document.getElementById('typeDistribution');
+                const typeMap = stats.typeMap;
+                const order = ['string', 'number', 'boolean', 'null', 'object', 'array'];
+                let html = '';
+                order.forEach(t => {
+                    if (typeMap[t]) {
+                        let icon = '';
+                        if (t === 'string') icon = '📝';
+                        else if (t === 'number') icon = '🔢';
+                        else if (t === 'boolean') icon = '✓';
+                        else if (t === 'null') icon = '∅';
+                        else if (t === 'object') icon = '📦';
+                        else if (t === 'array') icon = '📚';
+                        html += `<span class="type-tag">${icon} ${t} <span>${typeMap[t]}</span></span>`;
+                    }
+                });
+                if (html === '') html = '<span class="type-tag">无数据</span>';
+                typeDistDiv.innerHTML = html;
+            },
+
+            updateEnhancedStats(stats) {
+                document.getElementById('avgArrayLength').textContent = stats.avgArrayLength;
+                document.getElementById('duplicateCount').textContent = stats.duplicateCount;
+            },
+
+            renderResults() {
+                const currentJson = StateManager.get('currentJson');
+                if (!currentJson) {
+                    this.parseAndRender();
+                    return;
+                }
+
+                const filteredPaths = this.filterPaths();
+
+                document.getElementById('stats').textContent = `${filteredPaths.length} 个字段`;
+                document.getElementById('result-count').textContent = filteredPaths.length;
+
+                const listElement = document.getElementById('jsonpath-list');
+
+                if (filteredPaths.length === 0) {
+                    listElement.innerHTML = '<div class="empty-message">无匹配字段</div>';
+                    return;
+                }
+
+                if (StateManager.get('displayMode') === 'list') {
+                    listElement.innerHTML = this.renderListMode(filteredPaths, StateManager.get('currentFilter'));
+                } else {
+                    listElement.innerHTML = this.renderTreeMode();
+                }
+
+                this.bindItemEvents();
+            },
+
+            filterPaths() {
+                const filter = StateManager.get('currentFilter');
+                const wildcardEnabled = StateManager.get('wildcardEnabled');
+
+                if (!filter) {
+                    return wildcardEnabled ? StateManager.get('wildcardPaths') : StateManager.get('allPaths');
+                }
+
+                const filterLower = filter.toLowerCase();
+
+                if (wildcardEnabled) {
+                    return StateManager.get('wildcardPaths').filter(item => {
+                        const pathMatch = item.path.toLowerCase().includes(filterLower);
+                        const valuesMatch = item.values.some(v =>
+                            String(v).toLowerCase().includes(filterLower)
+                        );
+                        return pathMatch || valuesMatch;
+                    });
+                } else {
+                    return StateManager.get('allPaths').filter(item => {
+                        const pathMatch = item.path.toLowerCase().includes(filterLower);
+                        const valueMatch = item.value && String(item.value).toLowerCase().includes(filterLower);
+                        return pathMatch || valueMatch;
+                    });
+                }
+            },
+
+            parseAndRender() {
+                const jsonText = document.getElementById('json-input').value;
+                const result = JsonParser.parse(jsonText);
+
+                if (result.success) {
+                    StateManager.set('currentJson', result.data);
+                    PathExtractor.extract(result.data);
+
+                    // 计算统计信息
+                    this.computeAndUpdateStats(result.data);
+
+                    // 更新复杂度分析
+                    const complexityMetrics = ComplexityAnalyzer.analyze(StateManager.get('wildcardPaths'));
+                    StateManager.set('complexityMetrics', complexityMetrics);
+                    ComplexityAnalyzer.renderMetrics(complexityMetrics);
+
+                    this.renderResults();
+                }
+            },
+
+            computeAndUpdateStats(json) {
+                let objCount = 0, arrCount = 0;
+                const typeMap = {};
+
+                const walk = (val) => {
+                    const type = typeof val;
+                    if (val === null) {
+                        typeMap['null'] = (typeMap['null'] || 0) + 1;
+                    } else if (Array.isArray(val)) {
+                        arrCount++;
+                        typeMap['array'] = (typeMap['array'] || 0) + 1;
+                        val.forEach(item => walk(item));
+                    } else if (type === 'object') {
+                        objCount++;
+                        typeMap['object'] = (typeMap['object'] || 0) + 1;
+                        Object.values(val).forEach(v => walk(v));
+                    } else {
+                        typeMap[type] = (typeMap[type] || 0) + 1;
+                    }
+                };
+
+                walk(json);
+                this.updateStatsPanel({ objCount, arrCount, typeMap });
+
+                // 计算增强统计
+                const allPaths = StateManager.get('allPaths');
+                let arrayLengths = [];
+                const collectArrayLengths = (obj) => {
+                    if (Array.isArray(obj)) {
+                        arrayLengths.push(obj.length);
+                        obj.forEach(item => collectArrayLengths(item));
+                    } else if (obj && typeof obj === 'object') {
+                        Object.values(obj).forEach(val => collectArrayLengths(val));
+                    }
+                };
+                collectArrayLengths(json);
+                const avgArrayLength = arrayLengths.length > 0 ?
+                    (arrayLengths.reduce((a, b) => a + b, 0) / arrayLengths.length).toFixed(1) : 0;
+
+                const valueMap = new Map();
+                allPaths.forEach(item => {
+                    if (item.value !== null && typeof item.value !== 'object') {
+                        const strValue = String(item.value);
+                        valueMap.set(strValue, (valueMap.get(strValue) || 0) + 1);
+                    }
+                });
+                const duplicateCount = Array.from(valueMap.values()).filter(count => count > 1).length;
+
+                this.updateEnhancedStats({ avgArrayLength, duplicateCount });
+            },
+
+            bindItemEvents() {
+                // 展开/折叠
+                document.querySelectorAll('.expand-toggle').forEach(toggle => {
+                    toggle.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const path = e.target.dataset.path;
+                        const expanded = StateManager.get('expandedWildcards');
+                        if (expanded.has(path)) {
+                            expanded.delete(path);
+                        } else {
+                            expanded.add(path);
+                        }
+                        this.renderResults();
+                    });
+                });
+
+                // 树形模式深度组折叠
+                document.querySelectorAll('.tree-depth-header').forEach(header => {
+                    header.addEventListener('click', (e) => {
+                        const group = header.closest('.tree-depth-group');
+                        const items = group.querySelector('.tree-depth-items');
+                        const isCollapsed = items.style.display === 'none';
+
+                        if (isCollapsed) {
+                            items.style.display = 'block';
+                            header.querySelector('.tree-count').textContent = header.querySelector('.tree-count').textContent.replace('▶ ', '');
+                        } else {
+                            items.style.display = 'none';
+                            const countEl = header.querySelector('.tree-count');
+                            countEl.textContent = '▶ ' + countEl.textContent;
+                        }
+                    });
+                });
+
+                // 复制和点击
+                document.querySelectorAll('.jsonpath-item, .expanded-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const path = item.dataset.path;
+                        if (path && StateManager.get('copyEnabled')) {
+                            this.copyPath(path);
+                        }
+                    });
+                });
+
+                // value-preview 点击显示完整值
+                document.querySelectorAll('.value-preview').forEach(preview => {
+                    preview.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const encoded = preview.dataset.fullValue;
+                        const fullValue = encoded ? this.safeGetFullValue(encoded) : preview.textContent;
+                        if (fullValue && fullValue !== 'undefined' && fullValue !== '') {
+                            this.showValuePopup(fullValue);
+                        }
+                    });
+                });
+            },
+
+            showValuePopup(value) {
+                const overlay = document.getElementById('value-popup-overlay');
+                const content = document.getElementById('value-popup-content');
+                content.textContent = value;
+                this.currentPopupValue = value; // 保存当前值供复制使用
+                overlay.classList.add('active');
+            },
+
+            hideValuePopup() {
+                const overlay = document.getElementById('value-popup-overlay');
+                overlay.classList.remove('active');
+            },
+
+            copyPath(path) {
+                navigator.clipboard.writeText(path).then(() => {
+                    EventHandlers.showToast('已复制到剪贴板');
+                    document.querySelectorAll('.jsonpath-item').forEach(item => {
+                        if (item.dataset.path === path) {
+                            item.classList.add('copied');
+                            setTimeout(() => item.classList.remove('copied'), 300);
+                        }
+                    });
+                }).catch(() => {
+                    EventHandlers.showToast('复制失败');
+                });
+            },
+
+            displayJsonPathResult(matches, expr) {
+                const resultDiv = document.getElementById('jsonpath-test-result');
+
+                if (matches.length === 0) {
+                    resultDiv.innerHTML = `<div class="jsonpath-test-item">没有找到匹配的结果</div>`;
+                    return;
+                }
+
+                let html = `<div style="margin-bottom: 8px; color: var(--text-secondary);">找到 ${matches.length} 个匹配结果</div>`;
+
+                matches.slice(0, 10).forEach((match) => {
+                    const valueStr = typeof match.value === 'object' ?
+                        JSON.stringify(match.value) :
+                        String(match.value);
+                    const truncatedValue = valueStr.length > 50 ?
+                        valueStr.substring(0, 50) + '…' :
+                        valueStr;
+
+                    html += `
+                        <div class="jsonpath-test-item" data-path="${this.escapeHtml(match.path)}" style="cursor: pointer;">
+                            <span class="path">${this.highlightPath(match.path, StateManager.get('pathStyle'))}</span>
+                            <span class="value">${truncatedValue}</span>
+                        </div>
+                    `;
+                });
+
+                if (matches.length > 10) {
+                    html += `<div class="jsonpath-test-item">... 还有 ${matches.length - 10} 个结果</div>`;
+                }
+
+                resultDiv.innerHTML = html;
+            },
+
+            updateModeLabels() {
+                const modeText = StateManager.get('displayMode') === 'list' ? '列表' : '树形';
+                const styleText = StateManager.get('pathStyle') === 'dot' ? '点号' : '括号';
+                const fullText = `${modeText} · ${styleText}`;
+                const icon = StateManager.get('displayMode') === 'list' ? '📋' : '🌳';
+
+                document.getElementById('current-mode-label').textContent = fullText;
+                document.getElementById('style-text').textContent = fullText;
+                document.getElementById('style-icon').textContent = icon;
+            }
+        };
+
+        // ========================================
+        // 9. 事件处理模块
+        // ========================================
+        const EventHandlers = {
+            init() {
+                this.bindTabs();
+                this.bindControls();
+                this.bindJsonInput();
+                this.bindUrlFetch();
+                this.bindJsonPathTest();
+                this.bindCopyAll();
+                this.bindSyntaxHelp();
+                this.bindValuePopup();
+
+                // 初始化
+                UIRenderer.parseAndRender();
+                UIRenderer.updateModeLabels();
+            },
+
+            bindValuePopup() {
+                const overlay = document.getElementById('value-popup-overlay');
+                const closeBtn = document.getElementById('value-popup-close');
+                const copyBtn = document.getElementById('value-popup-copy');
+
+                // 点击关闭按钮
+                closeBtn.addEventListener('click', () => {
+                    UIRenderer.hideValuePopup();
+                });
+
+                // 点击复制按钮
+                copyBtn.addEventListener('click', () => {
+                    const value = UIRenderer.currentPopupValue;
+                    if (value) {
+                        navigator.clipboard.writeText(value).then(() => {
+                            copyBtn.textContent = '✓ 已复制';
+                            copyBtn.classList.add('copied');
+                            setTimeout(() => {
+                                copyBtn.textContent = '📋 复制';
+                                copyBtn.classList.remove('copied');
+                            }, 1500);
+                        }).catch(() => {
+                            EventHandlers.showToast('复制失败');
+                        });
+                    }
+                });
+
+                // 点击遮罩层关闭
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) {
+                        UIRenderer.hideValuePopup();
+                    }
+                });
+
+                // ESC 键关闭
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && overlay.classList.contains('active')) {
+                        UIRenderer.hideValuePopup();
+                    }
+                });
+            },
+
+            bindTabs() {
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const tab = btn.dataset.tab;
+
+                        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+                        btn.classList.add('active');
+                        document.getElementById(`${tab}-tab`).classList.add('active');
+                    });
+                });
+            },
+
+            bindControls() {
+                // 显示模式
+                document.querySelectorAll('[data-display]').forEach(opt => {
+                    opt.addEventListener('click', () => {
+                        StateManager.set('displayMode', opt.dataset.display);
+                        document.querySelectorAll('.radio-option').forEach(o => {
+                            if (o.querySelector('input[name="display-mode"]')) {
+                                o.classList.remove('selected');
+                            }
+                        });
+                        opt.classList.add('selected');
+                        UIRenderer.updateModeLabels();
+                        UIRenderer.renderResults();
+                    });
+                });
+
+                // 路径风格
+                document.querySelectorAll('[data-style]').forEach(opt => {
+                    opt.addEventListener('click', () => {
+                        StateManager.set('pathStyle', opt.dataset.style);
+                        document.querySelectorAll('.radio-option').forEach(o => {
+                            if (o.querySelector('input[name="path-style"]')) {
+                                o.classList.remove('selected');
+                            }
+                        });
+                        opt.classList.add('selected');
+                        UIRenderer.updateModeLabels();
+
+                        // 重新提取路径
+                        if (StateManager.get('currentJson')) {
+                            PathExtractor.extract(StateManager.get('currentJson'));
+                            UIRenderer.renderResults();
+                        }
+                    });
+                });
+
+                // 通配符开关
+                document.getElementById('wildcard-toggle').addEventListener('change', (e) => {
+                    StateManager.set('wildcardEnabled', e.target.checked);
+                    if (!e.target.checked) {
+                        StateManager.state.expandedWildcards.clear();
+                    }
+                    UIRenderer.renderResults();
+                });
+
+                // 复制开关
+                document.getElementById('copy-toggle').addEventListener('change', (e) => {
+                    StateManager.set('copyEnabled', e.target.checked);
+                    const copyAllBtn = document.getElementById('copy-all-btn');
+                    copyAllBtn.style.display = e.target.checked ? 'flex' : 'none';
+                    UIRenderer.renderResults();
+                });
+
+                // 仅显示首项开关
+                document.getElementById('first-item-toggle').addEventListener('change', (e) => {
+                    StateManager.set('firstItemOnly', e.target.checked);
+                    UIRenderer.renderResults();
+                });
+
+                // 深度颜色开关
+                document.getElementById('depth-color-toggle').addEventListener('change', (e) => {
+                    StateManager.set('depthColorsEnabled', e.target.checked);
+                    UIRenderer.renderResults();
+                });
+
+                // 搜索
+                let searchTimeout;
+                document.getElementById('search-input').addEventListener('input', (e) => {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        StateManager.set('currentFilter', e.target.value);
+                        UIRenderer.renderResults();
+                    }, 150);
+                });
+            },
+
+            bindJsonInput() {
+                document.getElementById('json-input').addEventListener('input', () => {
+                    UIRenderer.parseAndRender();
+                });
+
+                // JSON 输入框复制按钮
+                const copyBtn = document.getElementById('json-input-copy');
+                copyBtn.addEventListener('click', () => {
+                    const jsonContent = document.getElementById('json-input').value;
+                    if (jsonContent) {
+                        navigator.clipboard.writeText(jsonContent).then(() => {
+                            copyBtn.textContent = '✓';
+                            copyBtn.classList.add('copied');
+                            setTimeout(() => {
+                                copyBtn.textContent = '📋';
+                                copyBtn.classList.remove('copied');
+                            }, 1500);
+                        }).catch(() => {
+                            this.showToast('复制失败');
+                        });
+                    }
+                });
+
+                // JSON格式化选项（单选）
+                document.querySelectorAll('input[name="json-format"]').forEach(radio => {
+                    radio.addEventListener('change', (e) => {
+                        StateManager.set('jsonFormat', e.target.value);
+                        // 更新UI选中状态
+                        document.querySelectorAll('.json-format-option').forEach(opt => opt.classList.remove('selected'));
+                        e.target.closest('.json-format-option').classList.add('selected');
+                        // 重新处理并显示JSON
+                        this.applyJsonFormat();
+                    });
+                });
+
+                // JSON转义开关
+                document.getElementById('json-escape-toggle').addEventListener('change', (e) => {
+                    const wasEscapeOn = StateManager.get('jsonEscape');
+                    const willEscapeOn = e.target.checked;
+
+                    if (!wasEscapeOn && willEscapeOn) {
+                        // 打开转义：保存当前JSON，然后转义
+                        const input = document.getElementById('json-input');
+                        const currentValue = input.value;
+                        // 保存转义前的JSON
+                        StateManager.set('originalJsonBeforeEscape', currentValue);
+                        // 应用转义
+                        StateManager.set('jsonEscape', true);
+                        this.applyJsonFormat();
+                    } else if (wasEscapeOn && !willEscapeOn) {
+                        // 关闭转义：恢复之前保存的JSON
+                        const input = document.getElementById('json-input');
+                        const originalJson = StateManager.get('originalJsonBeforeEscape');
+                        if (originalJson) {
+                            input.value = originalJson;
+                            StateManager.set('jsonEscape', false);
+                            StateManager.set('originalJsonBeforeEscape', null);
+                            UIRenderer.parseAndRender();
+                        } else {
+                            // 如果没有保存的JSON，尝试反转义
+                            StateManager.set('jsonEscape', false);
+                            this.applyJsonFormat();
+                        }
+                    } else {
+                        StateManager.set('jsonEscape', willEscapeOn);
+                        this.applyJsonFormat();
+                    }
+                });
+
+                // 初始化选中状态
+                const initialFormat = document.querySelector('input[name="json-format"]:checked');
+                if (initialFormat) {
+                    initialFormat.closest('.json-format-option').classList.add('selected');
+                }
+            },
+
+            applyJsonFormat() {
+                const input = document.getElementById('json-input');
+                const rawValue = input.value;
+                if (!rawValue.trim()) return;
+
+                try {
+                    // 检查是否是转义形式的JSON
+                    const isEscaped = JsonProcessor.isEscaped(rawValue);
+                    // 如果是转义形式，先尝试反转义来验证
+                    let jsonToParse = rawValue;
+                    if (isEscaped) {
+                        jsonToParse = JsonProcessor.unescape(rawValue);
+                    }
+                    // 解析JSON检查是否有效
+                    const parsed = JSON.parse(jsonToParse);
+                    // 根据设置重新格式化
+                    const formatted = JsonProcessor.process(rawValue);
+                    // 只有格式化结果与原值不同时才更新
+                    if (formatted !== rawValue) {
+                        input.value = formatted;
+                    }
+                    UIRenderer.parseAndRender();
+                } catch (e) {
+                    // JSON无效，不做格式化处理
+                }
+            },
+
+            bindUrlFetch() {
+                document.getElementById('fetch-btn').addEventListener('click', async () => {
+                    const url = document.getElementById('url-input').value;
+                    if (!url) {
+                        this.showToast('请输入URL', 'error');
+                        return;
+                    }
+
+                    const fetchBtn = document.getElementById('fetch-btn');
+                    fetchBtn.disabled = true;
+                    fetchBtn.innerHTML = '<span class="loading-spinner"></span> 加载中';
+
+                    try {
+                        const response = await fetch(url);
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        const data = await response.json();
+                        StateManager.set('currentJson', data);
+                        document.getElementById('json-input').value = JsonParser.stringify(data);
+                        ErrorHandler.hide(document.getElementById('error-message'));
+                        PathExtractor.extract(data);
+                        UIRenderer.computeAndUpdateStats(data);
+
+                        const complexityMetrics = ComplexityAnalyzer.analyze(StateManager.get('wildcardPaths'));
+                        StateManager.set('complexityMetrics', complexityMetrics);
+                        ComplexityAnalyzer.renderMetrics(complexityMetrics);
+
+                        UIRenderer.renderResults();
+
+                        // 切换到 JSON 标签页
+                        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                        document.querySelector('[data-tab="json"]').classList.add('active');
+                        document.getElementById('json-tab').classList.add('active');
+
+                        // 显示成功提示
+                        this.showToast('URL 加载成功！', 'success');
+                    } catch (error) {
+                        ErrorHandler.show(document.getElementById('error-message'), error);
+                        // 显示失败提示
+                        this.showToast(`加载失败: ${error.message}`, 'error');
+                    } finally {
+                        fetchBtn.disabled = false;
+                        fetchBtn.textContent = '获取';
+                    }
+                });
+            },
+
+            bindJsonPathTest() {
+                document.getElementById('test-btn').addEventListener('click', () => {
+                    const currentJson = StateManager.get('currentJson');
+                    if (!currentJson) {
+                        ErrorHandler.show(document.getElementById('error-message'), { message: '请先输入 JSON 数据' });
+                        return;
+                    }
+
+                    const jsonPathExpr = document.getElementById('jsonpath-test-input').value;
+                    if (!jsonPathExpr) {
+                        ErrorHandler.show(document.getElementById('error-message'), { message: '请输入 JSONPath 表达式' });
+                        return;
+                    }
+
+                    try {
+                        const result = JsonPathEvaluator.evaluate(currentJson, jsonPathExpr);
+                        StateManager.set('currentJsonPathMatches', result);
+                        UIRenderer.displayJsonPathResult(result, jsonPathExpr);
+                        UIRenderer.renderResults();
+                    } catch (error) {
+                        const resultDiv = document.getElementById('jsonpath-test-result');
+                        resultDiv.innerHTML = `
+                            <div class="jsonpath-test-error">
+                                <div class="error-type">❌ 错误: ${error.message}</div>
+                                <div class="error-hint">请检查 JSONPath 表达式的语法是否正确</div>
+                            </div>
+                        `;
+                    }
+                });
+            },
+
+            bindCopyAll() {
+                document.getElementById('copy-all-btn').addEventListener('click', () => {
+                    if (!StateManager.get('copyEnabled')) return;
+
+                    const filteredPaths = UIRenderer.filterPaths();
+                    const paths = filteredPaths.map(p => p.path);
+                    const text = paths.join('\n');
+
+                    navigator.clipboard.writeText(text).then(() => {
+                        this.showToast(`已复制 ${paths.length} 个路径`);
+                    });
+                });
+            },
+
+            bindSyntaxHelp() {
+                document.querySelectorAll('.syntax-tag').forEach(tag => {
+                    tag.addEventListener('click', () => {
+                        document.getElementById('jsonpath-test-input').value = tag.dataset.syntax;
+                        document.getElementById('jsonpath-test-input').focus();
+                    });
+                });
+            },
+
+            showToast(message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+
+                const icons = {
+                    success: '✓',
+                    error: '✕',
+                    info: 'ℹ'
+                };
+
+                toast.innerHTML = `<span class="toast-icon">${icons[type] || ''}</span>${message}`;
+                document.body.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.remove();
+                }, 3000);
+            }
+        };
+
+        // ========================================
+        // 应用初始化
+        // ========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            ThemeManager.init();
+            EventHandlers.init();
+
+            // 初始化复制按钮状态
+            document.getElementById('copy-toggle').checked = false;
+            document.getElementById('wildcard-toggle').checked = true;
+            document.getElementById('copy-all-btn').style.display = 'none';
+
+            // JSON树形视图切换功能
+            const jsonViewToggle = document.getElementById('json-view-toggle');
+            const jsonViewerSection = document.getElementById('json-viewer-section');
+            const controlsBar = document.getElementById('controls-bar');
+            const outputSection = document.getElementById('output-section');
+            const jsonTree = document.getElementById('json-tree');
+            const jsonSearchInput = document.getElementById('json-search-input');
+            const jsonExpandAllBtn = document.getElementById('json-expand-all');
+            const jsonCollapseAllBtn = document.getElementById('json-collapse-all');
+            const jsonCopyBtn = document.getElementById('json-copy-btn');
+
+            let currentJsonData = null;
+            let searchMatches = [];
+            let currentMatchIndex = -1;
+
+            // 渲染JSON树形结构
+            function renderJsonTree(data) {
+                jsonTree.innerHTML = '';
+                const tree = createTreeNode(data, '', true);
+                jsonTree.appendChild(tree);
+            }
+
+            // 创建树节点
+            function createTreeNode(data, key, isLast, path = '') {
+                const nodeLine = document.createElement('div');
+                nodeLine.className = 'json-node-line';
+
+                const node = document.createElement('div');
+                node.className = 'json-node';
+
+                const type = getType(data);
+
+                if (type === 'object' || type === 'array') {
+                    const isArray = type === 'array';
+                    const entries = isArray ? data : Object.entries(data);
+                    const len = isArray ? data.length : Object.keys(data).length;
+                    const bracketOpen = isArray ? '[' : '{';
+                    const bracketClose = isArray ? ']' : '}';
+
+                    // 折叠按钮
+                    const toggle = document.createElement('span');
+                    toggle.className = 'json-toggle';
+                    toggle.textContent = '−';
+                    toggle.onclick = (e) => {
+                        e.stopPropagation();
+                        const nodeWrapper = toggle.closest('.json-node');
+                        nodeWrapper.classList.toggle('collapsed');
+                        toggle.textContent = nodeWrapper.classList.contains('collapsed') ? '+' : '−';
+                    };
+
+                    // 子数量标记 {数字} 或 [数字]
+                    const countBadge = document.createElement('span');
+                    countBadge.className = 'json-count-badge';
+                    countBadge.textContent = isArray ? `[${len}]` : `{${len}}`;
+
+                    // 键名（如果有）
+                    if (key !== '') {
+                        const keySpan = document.createElement('span');
+                        keySpan.className = 'json-key';
+                        keySpan.textContent = `"${key}"`;
+                        nodeLine.appendChild(toggle);
+                        nodeLine.appendChild(keySpan);
+                        nodeLine.appendChild(countBadge);
+                        // 冒号
+                        const colonSpan = document.createElement('span');
+                        colonSpan.className = 'json-colon';
+                        colonSpan.textContent = ': ';
+                        nodeLine.appendChild(colonSpan);
+                    } else {
+                        nodeLine.appendChild(toggle);
+                        nodeLine.appendChild(countBadge);
+                    }
+
+                    // 开括号（折叠时隐藏）
+                    const openBracket = document.createElement('span');
+                    openBracket.className = 'json-bracket';
+                    openBracket.textContent = bracketOpen;
+                    nodeLine.appendChild(openBracket);
+
+                    // 预览（折叠时显示 [] 或 {}）
+                    const preview = document.createElement('span');
+                    preview.className = 'json-preview';
+                    preview.textContent = isArray ? '[]' : '{}';
+                    nodeLine.appendChild(preview);
+
+                    node.appendChild(nodeLine);
+
+                    // 子节点容器
+                    const children = document.createElement('div');
+                    children.className = 'json-children';
+
+                    if (isArray) {
+                        data.forEach((item, index) => {
+                            const childNode = createTreeNode(item, '', index === data.length - 1, `${path}[${index}]`);
+                            children.appendChild(childNode);
+                        });
+                    } else {
+                        const keys = Object.keys(data);
+                        keys.forEach((k, index) => {
+                            const childNode = createTreeNode(data[k], k, index === keys.length - 1, `${path}.${k}`);
+                            children.appendChild(childNode);
+                        });
+                    }
+
+                    node.appendChild(children);
+
+                    // 闭括号
+                    const closeLine = document.createElement('div');
+                    closeLine.className = 'json-node-line';
+                    const closeBracket = document.createElement('span');
+                    closeBracket.className = 'json-bracket';
+                    closeBracket.textContent = bracketClose + (isLast ? '' : ',');
+                    closeLine.appendChild(closeBracket);
+                    node.appendChild(closeLine);
+
+                } else {
+                    // 基本类型值
+                    const valueSpan = document.createElement('span');
+
+                    if (key !== '') {
+                        const keySpan = document.createElement('span');
+                        keySpan.className = 'json-key';
+                        keySpan.textContent = `"${key}": `;
+                        nodeLine.appendChild(keySpan);
+                    }
+
+                    if (type === 'string') {
+                        valueSpan.className = 'json-string';
+                        valueSpan.textContent = `"${escapeHtml(data)}"`;
+                    } else if (type === 'number') {
+                        valueSpan.className = 'json-number';
+                        valueSpan.textContent = data;
+                    } else if (type === 'boolean') {
+                        valueSpan.className = 'json-boolean';
+                        valueSpan.textContent = data;
+                    } else if (type === 'null') {
+                        valueSpan.className = 'json-null';
+                        valueSpan.textContent = 'null';
+                    }
+
+                    valueSpan.textContent += isLast ? '' : ',';
+
+                    nodeLine.appendChild(valueSpan);
+                    node.appendChild(nodeLine);
+                }
+
+                return node;
+            }
+
+            function getType(value) {
+                if (value === null) return 'null';
+                if (Array.isArray(value)) return 'array';
+                return typeof value;
+            }
+
+            function escapeHtml(str) {
+                return String(str)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;');
+            }
+
+            // 切换JSON视图
+            jsonViewToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    controlsBar.style.display = 'none';
+                    outputSection.style.display = 'none';
+                    jsonViewerSection.style.display = 'block';
+
+                    // 获取当前JSON数据
+                    let jsonData = StateManager.get('jsonData') || StateManager.get('currentJson');
+                    if (!jsonData) {
+                        const jsonInput = document.getElementById('json-input');
+                        try {
+                            jsonData = JSON.parse(jsonInput.value);
+                        } catch (e) {
+                            jsonTree.innerHTML = '<div style="padding: 20px; color: var(--error-text);">请先输入有效的JSON数据</div>';
+                            return;
+                        }
+                    }
+                    currentJsonData = jsonData;
+                    renderJsonTree(jsonData);
+                } else {
+                    controlsBar.style.display = '';
+                    outputSection.style.display = '';
+                    jsonViewerSection.style.display = 'none';
+                }
+            });
+
+            // 全部展开
+            jsonExpandAllBtn.addEventListener('click', () => {
+                document.querySelectorAll('.json-node.collapsed').forEach(node => {
+                    node.classList.remove('collapsed');
+                    const toggle = node.querySelector('.json-toggle');
+                    if (toggle) toggle.textContent = '−';
+                });
+            });
+
+            // 全部收缩
+            jsonCollapseAllBtn.addEventListener('click', () => {
+                document.querySelectorAll('.json-node').forEach(node => {
+                    if (node.querySelector('.json-children')) {
+                        node.classList.add('collapsed');
+                        const toggle = node.querySelector('.json-toggle');
+                        if (toggle) toggle.textContent = '+';
+                    }
+                });
+            });
+
+            // 放大字体
+            let jsonFontSize = 13; // 默认字体大小
+            const jsonZoomInBtn = document.getElementById('json-zoom-in');
+            const jsonZoomOutBtn = document.getElementById('json-zoom-out');
+
+            jsonZoomInBtn.addEventListener('click', () => {
+                if (jsonFontSize < 24) {
+                    jsonFontSize += 1;
+                    jsonTree.style.fontSize = jsonFontSize + 'px';
+                }
+            });
+
+            // 缩小字体
+            jsonZoomOutBtn.addEventListener('click', () => {
+                if (jsonFontSize > 10) {
+                    jsonFontSize -= 1;
+                    jsonTree.style.fontSize = jsonFontSize + 'px';
+                }
+            });
+
+            // 搜索功能
+            function performSearch(query) {
+                // 清除之前的搜索高亮
+                document.querySelectorAll('.json-search-highlight').forEach(el => {
+                    el.classList.remove('json-search-highlight');
+                });
+
+                if (!query) {
+                    searchMatches = [];
+                    currentMatchIndex = -1;
+                    // 显示结果数量
+                    updateSearchResultCount(0);
+                    return;
+                }
+
+                searchMatches = [];
+                const regex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+
+                // 搜索键和值
+                jsonTree.querySelectorAll('.json-key, .json-string, .json-number, .json-boolean').forEach(el => {
+                    const text = el.textContent;
+                    regex.lastIndex = 0; // 重置正则索引
+                    if (regex.test(text)) {
+                        searchMatches.push(el);
+                    }
+                });
+
+                currentMatchIndex = -1;
+                // 显示结果数量
+                updateSearchResultCount(searchMatches.length);
+                
+                if (searchMatches.length > 0) {
+                    goToNextMatch();
+                }
+            }
+
+            // 更新搜索结果显示
+            function updateSearchResultCount(count) {
+                const searchBtn = document.getElementById('json-search-btn');
+                if (count > 0) {
+                    searchBtn.textContent = `${count}个结果`;
+                } else {
+                    searchBtn.textContent = 'GO';
+                }
+            }
+
+            function goToNextMatch() {
+                if (searchMatches.length === 0) return;
+
+                // 移除之前的高亮
+                document.querySelectorAll('.json-search-highlight').forEach(el => {
+                    el.classList.remove('json-search-highlight');
+                });
+
+                currentMatchIndex = (currentMatchIndex + 1) % searchMatches.length;
+                const match = searchMatches[currentMatchIndex];
+                match.classList.add('json-search-highlight');
+
+                // 展开父节点
+                let parent = match.closest('.json-node.collapsed');
+                while (parent) {
+                    parent.classList.remove('collapsed');
+                    const toggle = parent.querySelector('.json-toggle');
+                    if (toggle) toggle.textContent = '−';
+                    parent = parent.parentElement.closest('.json-node.collapsed');
+                }
+
+                // 滚动到视图
+                match.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            function goToPrevMatch() {
+                if (searchMatches.length === 0) return;
+
+                document.querySelectorAll('.json-search-highlight').forEach(el => {
+                    el.classList.remove('json-search-highlight');
+                });
+
+                currentMatchIndex = currentMatchIndex <= 0 ? searchMatches.length - 1 : currentMatchIndex - 1;
+                const match = searchMatches[currentMatchIndex];
+                match.classList.add('json-search-highlight');
+
+                let parent = match.closest('.json-node.collapsed');
+                while (parent) {
+                    parent.classList.remove('collapsed');
+                    const toggle = parent.querySelector('.json-toggle');
+                    if (toggle) toggle.textContent = '−';
+                    parent = parent.parentElement.closest('.json-node.collapsed');
+                }
+
+                match.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            document.getElementById('json-search-btn').addEventListener('click', () => {
+                performSearch(jsonSearchInput.value);
+            });
+
+            jsonSearchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    performSearch(jsonSearchInput.value);
+                }
+            });
+
+            document.getElementById('json-search-prev').addEventListener('click', goToPrevMatch);
+            document.getElementById('json-search-next').addEventListener('click', goToNextMatch);
+
+            // 复制按钮
+            jsonCopyBtn.addEventListener('click', () => {
+                if (currentJsonData) {
+                    navigator.clipboard.writeText(JSON.stringify(currentJsonData, null, 2)).then(() => {
+                        EventHandlers.showToast('已复制到剪贴板');
+                    }).catch(() => {
+                        EventHandlers.showToast('复制失败', 'error');
+                    });
+                }
+            });
+        });
+    </script>
+
+<style>
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.inland-security-footer {
+  position: fixed;
+  z-index: 10;
+  bottom: 0;
+  right: 0;
+  width: fit-content;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.tooltip-container {
+  position: relative;
+}
+
+.trigger-content {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  background-color: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.minimax-link {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 300;
+  color: #adadad;
+  text-decoration: none;
+}
+
+.minimax-link:visited {
+  color: #adadad;
+}
+
+.minimax-link:hover {
+  color: #666666;
+}
+
+.tooltip-content {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  padding-bottom: 16px; /* 8px 内容间距 + 8px 用于鼠标移动的透明区域 */
+  font-size: 12px;
+  line-height: 17px;
+  background-color: #fafafa;
+  border-radius: 12px;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  color: #171717;
+}
+
+/* 创建透明的连接区域，让鼠标可以平滑移动到 tooltip */
+.tooltip-content::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  right: 0;
+  height: 16px;
+}
+
+.tooltip-container:hover .tooltip-content {
+  display: flex;
+}
+
+.info-section {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.beian-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: #171717;
+}
+
+.beian-icon {
+  width: 14px;
+  height: 14px;
+  margin-right: 2px;
+}
+
+.underline-text {
+  color: #171717;
+  text-decoration: underline;
+}
+
+.underline-text:hover {
+  color: #000000;
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .trigger-content {
+    background-color: transparent;
+  }
+
+  .minimax-link,
+  .minimax-link:visited {
+    color: #666666;
+  }
+
+  .minimax-link:hover {
+    color: #adadad;
+  }
+
+  .tooltip-content {
+    background-color: #262626;
+    color: #ededed;
+  }
+
+  .beian-link,
+  .underline-text {
+    color: #ededed;
+  }
+
+  .underline-text:hover {
+    color: #ffffff;
+  }
+}
+
+
+</style>
+<style>
+    /* 其他链接的样式 */
+  .friend-links {
+    margin-top: 20px;
+    font-size: 14px;
+    color: #666;
+  }
+  .friend-links a {
+    color: #0066cc;
+    text-decoration: none;
+  }
+  .friend-links a:hover {
+    text-decoration: underline;
+  }
+</style>
+<div class="friend-links">
+  <a href="https://www.bejson.com/jsonviewernew/" target="_blank" rel="noopener noreferrer">Json在线视图查看器</a> | 
+  <a href="https://www.sojson.com/editor.html" target="_blank" rel="noopener noreferrer">Json视图(Json编辑器)</a>
+</div>
+</body>
+</html>
