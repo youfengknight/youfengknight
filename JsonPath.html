@@ -4331,6 +4331,12 @@
 
                 } else {
                     // 基本类型值
+                    // 添加占位符保持对齐
+                    const placeholder = document.createElement('span');
+                    placeholder.className = 'json-toggle';
+                    placeholder.style.visibility = 'hidden';
+                    nodeLine.appendChild(placeholder);
+
                     const valueSpan = document.createElement('span');
 
                     if (key !== '') {
@@ -4760,7 +4766,14 @@ body {
   <a href="https://www.bejson.com/jsonviewernew/" target="_blank" rel="noopener noreferrer">Json在线视图查看器</a> | 
   <a href="https://tools.ai225.com/tools/json-tree-viewer/" target="_blank" rel="noopener noreferrer">Json视图(Json编辑器)</a>
 </div>
-   
- 
+  <div class="tooltip-container">
+    <div class="trigger-content">
+      <a href="https://www.minimaxi.com/" target="_blank" rel="noreferrer" class="minimax-link">
+        <span>© 2026 MiniMax</span>
+      </a>
+    </div>
+    
+  </div>
+</div>
 </body>
 </html>
